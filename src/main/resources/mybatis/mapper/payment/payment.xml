@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.payment.mapper.PaymentMapper"> 
+	
+	<!-- 결제 가격 조회 -->
+	<select id="selectPrice" parameterType="int" resultType="string">
+		SELECT
+			PRICE
+		FROM
+			price A
+		WHERE item_seq = #{item_seq}
+		AND DEL_ID IS NULL
+	</select>
+	
+	<!-- 결제 가격 전체 조회 -->
+	<select id="selectPriceAll" parameterType="string" resultType="com.instarverse.api.v1.payment.vo.PriceVo">
+		SELECT
+			PAY_TYPE
+			, PRICE
+			, PRICE_KSTAR
+			, USE_YN
+		FROM
+			price A
+		WHERE PAY_CD = #{payCd}
+		AND DEL_ID IS NULL
+	</select>
+
+</mapper>

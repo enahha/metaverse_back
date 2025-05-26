@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.payment.mapper.PayLogMapper"> 
+	
+	<!-- 결제 로그 에러 등록 -->
+	<insert id="insertPayLogErr" parameterType="com.instarverse.api.v1.payment.vo.PayLogErrVo">
+		INSERT INTO pay_log_err (
+			code
+			, message
+			, params
+			, reg_id
+			, reg_time
+		) VALUES (
+			#{code}
+			, #{message}
+			, #{params}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 결제 인증 요청 로그 등록 -->
+	<insert id="insertPayLogAuthReq" parameterType="com.instarverse.api.v1.payment.vo.PayLogVo">
+		INSERT INTO pay_log_auth_req (
+			pc1_version
+			, pc1_gopaymethod
+			, pc1_mid
+			, pc1_oid
+			, pc1_price
+			, pc1_timestamp
+			, pc1_signature
+			, PC1_verification
+			, pc1_mkey
+			, pc1_currency
+			, pc1_goodname
+			, pc1_buyername
+			, pc1_buyertel
+			, pc1_buyeremail
+			, pc1_returnurl
+			, pc1_closeurl
+			, pc1_quotabase
+			, pc1_nointerest
+			, pc1_tax
+			, pc1_taxfree
+			, pc1_charset
+			, pc1_offerperiod
+			, pc1_payviewtype
+			, pc1_languageview
+			, pc1_logo_url
+			, pc1_logo_2nd
+			, pc1_popupurl
+			, pc1_parentemail
+			, pc1_ini_ssgpay_mdn
+			, pc1_merchantdata
+			, pc1_acceptmethod
+			, mo1_p_ini_payment
+			, mo1_p_mid
+			, mo1_p_oid
+			, mo1_p_amt
+			, mo1_p_goods
+			, mo1_p_uname
+			, mo1_p_next_url
+			, mo1_p_noti_url
+			, mo1_p_hpp_method
+			, mo1_p_mobile
+			, mo1_p_email
+			, mo1_p_mname
+			, mo1_p_charset
+			, mo1_p_offer_period
+			, mo1_p_quotabase
+			, mo1_p_tax
+			, mo1_p_taxfree
+			, mo1_p_card_option
+			, mo1_p_only_cardcode
+			, mo1_p_vbank_dt
+			, mo1_p_vbank_tm
+			, mo1_p_noti
+			, mo1_p_reserved
+			, reg_id
+			, reg_time
+		) VALUES (
+			#{pc1_version}
+			, #{pc1_gopaymethod}
+			, #{pc1_mid}
+			, #{pc1_oid}
+			, #{pc1_price}
+			, #{pc1_timestamp}
+			, #{pc1_signature}
+			, #{pc1_verification}
+			, #{pc1_mkey}
+			, #{pc1_currency}
+			, #{pc1_goodname}
+			, #{pc1_buyername}
+			, #{pc1_buyertel}
+			, #{pc1_buyeremail}
+			, #{pc1_returnurl}
+			, #{pc1_closeurl}
+			, #{pc1_quotabase}
+			, #{pc1_nointerest}
+			, #{pc1_tax}
+			, #{pc1_taxfree}
+			, #{pc1_charset}
+			, #{pc1_offerperiod}
+			, #{pc1_payviewtype}
+			, #{pc1_languageview}
+			, #{pc1_logo_url}
+			, #{pc1_logo_2nd}
+			, #{pc1_popupurl}
+			, #{pc1_parentemail}
+			, #{pc1_ini_ssgpay_mdn}
+			, #{pc1_merchantdata}
+			, #{pc1_acceptmethod}
+			, #{mo1_p_ini_payment}
+			, #{mo1_p_mid}
+			, #{mo1_p_oid}
+			, #{mo1_p_amt}
+			, #{mo1_p_goods}
+			, #{mo1_p_uname}
+			, #{mo1_p_next_url}
+			, #{mo1_p_noti_url}
+			, #{mo1_p_hpp_method}
+			, #{mo1_p_mobile}
+			, #{mo1_p_email}
+			, #{mo1_p_mname}
+			, #{mo1_p_charset}
+			, #{mo1_p_offer_period}
+			, #{mo1_p_quotabase}
+			, #{mo1_p_tax}
+			, #{mo1_p_taxfree}
+			, #{mo1_p_card_option}
+			, #{mo1_p_only_cardcode}
+			, #{mo1_p_vbank_dt}
+			, #{mo1_p_vbank_tm}
+			, #{mo1_p_noti}
+			, #{mo1_p_reserved}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 결제 인증 결과 로그 등록 -->
+	<insert id="insertPayLogAuthRes" parameterType="com.instarverse.api.v1.payment.vo.PayLogVo">
+		INSERT INTO pay_log_auth_res (
+			pc2_resultcode
+			, pc2_resultmsg
+			, pc2_mid
+			, pc2_ordernumber
+			, pc2_authtoken
+			, pc2_authurl
+			, pc2_netcancelurl
+			, pc2_charset
+			, pc2_merchantdata
+			, mo2_p_status
+			, mo2_p_rmesg1
+			, mo2_p_tid
+			, mo2_p_amt
+			, mo2_p_req_url
+			, mo2_p_noti
+			, reg_id
+			, reg_time
+		) VALUES (
+			#{pc2_resultcode}
+			, #{pc2_resultmsg}
+			, #{pc2_mid}
+			, #{pc2_ordernumber}
+			, #{pc2_authtoken}
+			, #{pc2_authurl}
+			, #{pc2_netcancelurl}
+			, #{pc2_charset}
+			, #{pc2_merchantdata}
+			, #{mo2_p_status}
+			, #{mo2_p_rmesg1}
+			, #{mo2_p_tid}
+			, #{mo2_p_amt}
+			, #{mo2_p_req_url}
+			, #{mo2_p_noti}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 결제 승인 요청 로그 등록 -->
+	<insert id="insertPayLogReq" parameterType="com.instarverse.api.v1.payment.vo.PayLogVo">
+		INSERT INTO pay_log_req (
+			pc3_mid
+			, pc3_authtoken
+			, pc3_timestamp
+			, pc3_signature
+			, PC3_verification
+			, pc3_charset
+			, pc3_format
+			, pc3_price
+			, mo3_p_mid
+			, mo3_p_tid
+			, reg_id
+			, reg_time
+		) VALUES (
+			#{pc3_mid}
+			, #{pc3_authtoken}
+			, #{pc3_timestamp}
+			, #{pc3_signature}
+			, #{pc3_verification}
+			, #{pc3_charset}
+			, #{pc3_format}
+			, #{pc3_price}
+			, #{mo3_p_mid}
+			, #{mo3_p_tid}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 결제 승인 결과 로그 등록 -->
+	<insert id="insertPayLogRes" parameterType="com.instarverse.api.v1.payment.vo.PayLogVo">
+		INSERT INTO pay_log_res (
+			pc4_resultcode
+			, pc4_resultmsg
+			, pc4_tid
+			, pc4_goodname
+			, pc4_totprice
+			, pc4_moid
+			, pc4_paymethod
+			, pc4_applnum
+			, pc4_appldate
+			, pc4_appltime
+			, pc4_eventcode
+			, pc4_buyername
+			, pc4_buyertel
+			, pc4_buyeremail
+			, pc4_custemail
+			, pc4_card_num
+			, pc4_card_interest
+			, pc4_card_quota
+			, pc4_card_code
+			, pc4_card_corpflag
+			, pc4_card_checkflag
+			, pc4_card_prtc_code
+			, pc4_card_bankcode
+			, pc4_card_srccode
+			, pc4_card_point
+			, pc4_card_couponprice
+			, pc4_card_coupondiscount
+			, pc4_card_usepoint
+			, pc4_naverpoint_usefreepoint
+			, pc4_naverpoint_cshrapplyn
+			, pc4_naverpoint_cshrapplamt
+			, pc4_currency
+			, pc4_orgprice
+			, pc4_card_billkey
+			, pc4_acct_bankcode
+			, pc4_cshr_resultcode
+			, pc4_cshr_type
+			, pc4_acct_name
+			, pc4_vact_num
+			, pc4_vact_bankcode
+			, pc4_vactbankname
+			, pc4_vact_name
+			, pc4_vact_inputname
+			, pc4_vact_date
+			, pc4_vact_time
+			, pc4_hpp_num
+			, pc4_paydevice
+			, pc4_hpp_billkey
+			, pc4_payoption
+			, pc4_ocb_num
+			, pc4_ocb_payprice
+			, pc4_ocb_saveapplnum
+			, pc4_ocb_payapplnum
+			, pc4_ocb_appldate
+			, pc4_upoint_num
+			, pc4_upoint_usablepoint
+			, pc4_upoint_applprice
+			, pc4_upnt_payoption
+			, pc4_upnt_saveprice
+			, pc4_upnt_payprice
+			, pc4_gspt_applprice
+			, pc4_gspt_saveprice
+			, pc4_gspt_payprice
+			, pc4_cult_userid
+			, pc4_gamg_cnt
+			, pc4_gamg_applprice
+			, pc4_gamg_num1
+			, pc4_gamg_price1
+			, pc4_teen_applprice
+			, pc4_teen_userid
+			, pc4_teen_applnum
+			, pc4_bcsh_applprice
+			, pc4_bcsh_userid
+			, pc4_bcsh_applnum
+			, pc4_phnb_num
+			, mo4_p_status
+			, mo4_p_rmesg1
+			, mo4_p_tid
+			, mo4_p_type
+			, mo4_p_auth_dt
+			, mo4_p_mid
+			, mo4_p_oid
+			, mo4_p_amt
+			, mo4_p_uname
+			, mo4_p_mname
+			, mo4_p_noti
+			, mo4_p_noteurl
+			, mo4_p_next_url
+			, mo4_p_card_issuer_code
+			, mo4_p_card_member_num
+			, mo4_p_card_purchase_code
+			, mo4_p_card_prtc_code
+			, mo4_p_card_interest
+			, mo4_card_corpflag
+			, mo4_p_card_checkflag
+			, mo4_p_rmesg2
+			, mo4_p_fn_cd1
+			, mo4_p_fn_nm
+			, mo4_p_card_num
+			, mo4_p_auth_no
+			, mo4_p_isp_cardcode
+			, mo4_p_couponflag
+			, mo4_p_coupon_discount
+			, mo4_p_card_applprice
+			, mo4_p_src_code
+			, mo4_p_card_usepoint
+			, mo4_naverpoint_usefreepoint
+			, mo4_naverpoint_cshrapplyn
+			, mo4_naverpoint_cshrapplamt
+			, mo4_card_empprtncode
+			, mo4_card_nomlmobprtncode
+			, mo4_bank_p_fn_cd1
+			, mo4_bank_p_fn_nm
+			, mo4_p_vact_num
+			, mo4_p_vact_bank_code
+			, mo4_vact_p_fn_nm
+			, mo4_p_vact_date
+			, mo4_p_vact_time
+			, mo4_p_vact_name
+			, mo4_p_hpp_corp
+			, mo4_p_hpp_num
+			, mo4_p_cshr_code
+			, mo4_p_cshr_msg
+			, mo4_p_cshr_amt
+			, mo4_p_cshr_sup_amt
+			, mo4_p_cshr_tax
+			, mo4_p_cshr_srvc_amt
+			, mo4_p_cshr_type
+			, mo4_p_cshr_dt
+			, mo4_p_cshr_auth_no
+			, mo4_p_kpay_appl_price
+			, mo4_p_kpay_paymethod
+			, mo4_p_kpay_quota
+			, mo4_p_kpay_inst
+			, mo4_p_kpay_check_flg
+			, reg_id
+			, reg_time
+		) VALUES (
+			#{pc4_resultcode}
+			, #{pc4_resultmsg}
+			, #{pc4_tid}
+			, #{pc4_goodname}
+			, #{pc4_totprice}
+			, #{pc4_moid}
+			, #{pc4_paymethod}
+			, #{pc4_applnum}
+			, #{pc4_appldate}
+			, #{pc4_appltime}
+			, #{pc4_eventcode}
+			, #{pc4_buyername}
+			, #{pc4_buyertel}
+			, #{pc4_buyeremail}
+			, #{pc4_custemail}
+			, #{pc4_card_num}
+			, #{pc4_card_interest}
+			, #{pc4_card_quota}
+			, #{pc4_card_code}
+			, #{pc4_card_corpflag}
+			, #{pc4_card_checkflag}
+			, #{pc4_card_prtc_code}
+			, #{pc4_card_bankcode}
+			, #{pc4_card_srccode}
+			, #{pc4_card_point}
+			, #{pc4_card_couponprice}
+			, #{pc4_card_coupondiscount}
+			, #{pc4_card_usepoint}
+			, #{pc4_naverpoint_usefreepoint}
+			, #{pc4_naverpoint_cshrapplyn}
+			, #{pc4_naverpoint_cshrapplamt}
+			, #{pc4_currency}
+			, #{pc4_orgprice}
+			, #{pc4_card_billkey}
+			, #{pc4_acct_bankcode}
+			, #{pc4_cshr_resultcode}
+			, #{pc4_cshr_type}
+			, #{pc4_acct_name}
+			, #{pc4_vact_num}
+			, #{pc4_vact_bankcode}
+			, #{pc4_vactbankname}
+			, #{pc4_vact_name}
+			, #{pc4_vact_inputname}
+			, #{pc4_vact_date}
+			, #{pc4_vact_time}
+			, #{pc4_hpp_num}
+			, #{pc4_paydevice}
+			, #{pc4_hpp_billkey}
+			, #{pc4_payoption}
+			, #{pc4_ocb_num}
+			, #{pc4_ocb_payprice}
+			, #{pc4_ocb_saveapplnum}
+			, #{pc4_ocb_payapplnum}
+			, #{pc4_ocb_appldate}
+			, #{pc4_upoint_num}
+			, #{pc4_upoint_usablepoint}
+			, #{pc4_upoint_applprice}
+			, #{pc4_upnt_payoption}
+			, #{pc4_upnt_saveprice}
+			, #{pc4_upnt_payprice}
+			, #{pc4_gspt_applprice}
+			, #{pc4_gspt_saveprice}
+			, #{pc4_gspt_payprice}
+			, #{pc4_cult_userid}
+			, #{pc4_gamg_cnt}
+			, #{pc4_gamg_applprice}
+			, #{pc4_gamg_num1}
+			, #{pc4_gamg_price1}
+			, #{pc4_teen_applprice}
+			, #{pc4_teen_userid}
+			, #{pc4_teen_applnum}
+			, #{pc4_bcsh_applprice}
+			, #{pc4_bcsh_userid}
+			, #{pc4_bcsh_applnum}
+			, #{pc4_phnb_num}
+			, #{mo4_p_status}
+			, #{mo4_p_rmesg1}
+			, #{mo4_p_tid}
+			, #{mo4_p_type}
+			, #{mo4_p_auth_dt}
+			, #{mo4_p_mid}
+			, #{mo4_p_oid}
+			, #{mo4_p_amt}
+			, #{mo4_p_uname}
+			, #{mo4_p_mname}
+			, #{mo4_p_noti}
+			, #{mo4_p_noteurl}
+			, #{mo4_p_next_url}
+			, #{mo4_p_card_issuer_code}
+			, #{mo4_p_card_member_num}
+			, #{mo4_p_card_purchase_code}
+			, #{mo4_p_card_prtc_code}
+			, #{mo4_p_card_interest}
+			, #{mo4_card_corpflag}
+			, #{mo4_p_card_checkflag}
+			, #{mo4_p_rmesg2}
+			, #{mo4_p_fn_cd1}
+			, #{mo4_p_fn_nm}
+			, #{mo4_p_card_num}
+			, #{mo4_p_auth_no}
+			, #{mo4_p_isp_cardcode}
+			, #{mo4_p_couponflag}
+			, #{mo4_p_coupon_discount}
+			, #{mo4_p_card_applprice}
+			, #{mo4_p_src_code}
+			, #{mo4_p_card_usepoint}
+			, #{mo4_naverpoint_usefreepoint}
+			, #{mo4_naverpoint_cshrapplyn}
+			, #{mo4_naverpoint_cshrapplamt}
+			, #{mo4_card_empprtncode}
+			, #{mo4_card_nomlmobprtncode}
+			, #{mo4_bank_p_fn_cd1}
+			, #{mo4_bank_p_fn_nm}
+			, #{mo4_p_vact_num}
+			, #{mo4_p_vact_bank_code}
+			, #{mo4_vact_p_fn_nm}
+			, #{mo4_p_vact_date}
+			, #{mo4_p_vact_time}
+			, #{mo4_p_vact_name}
+			, #{mo4_p_hpp_corp}
+			, #{mo4_p_hpp_num}
+			, #{mo4_p_cshr_code}
+			, #{mo4_p_cshr_msg}
+			, #{mo4_p_cshr_amt}
+			, #{mo4_p_cshr_sup_amt}
+			, #{mo4_p_cshr_tax}
+			, #{mo4_p_cshr_srvc_amt}
+			, #{mo4_p_cshr_type}
+			, #{mo4_p_cshr_dt}
+			, #{mo4_p_cshr_auth_no}
+			, #{mo4_p_kpay_appl_price}
+			, #{mo4_p_kpay_paymethod}
+			, #{mo4_p_kpay_quota}
+			, #{mo4_p_kpay_inst}
+			, #{mo4_p_kpay_check_flg}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+
+
+</mapper>

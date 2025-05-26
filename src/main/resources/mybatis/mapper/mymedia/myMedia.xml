@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.mymedia.mapper.MyMediaMapper"> 
+	
+	<!-- 마이미디어 리스트 맥스 페이지 -->
+	<select id="selectMyMediaListLastPageNum" parameterType="com.instarverse.api.v1.mymedia.vo.MyMediaVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			my_media A
+		WHERE 1=1
+		AND DEL_ID IS NULL
+		AND UID = #{uid}
+		<if test="keyword != null and keyword != ''">
+		AND (
+			UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.DESCRIPTION) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.SUBTITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+		)
+		</if>
+	</select>
+	
+	<!-- 마이미디어 리스트 조회 -->
+	<select id="selectMyMediaList" parameterType="com.instarverse.api.v1.mymedia.vo.MyMediaVo" resultType="com.instarverse.api.v1.mymedia.vo.MyMediaVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, UID
+					, TYPE
+					, URL
+					, ORDER_NO
+					, TITLE
+					, SUBTITLE
+					, DESCRIPTION
+					, SALE_YN
+					, PRICE
+					, CREATED_AT
+					, SIZE
+					, MATERIALS
+					, TAG
+					, DEL_YN
+					, REG_ID
+					, REG_TIME
+					, MOD_ID
+					, MOD_TIME
+					, DEL_ID
+					, DEL_TIME
+				FROM
+					my_media A
+				WHERE 1=1
+				AND (DEL_ID IS NULL OR DEL_ID = "")
+				AND UID = #{uid}
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.DESCRIPTION) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.SUBTITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				ORDER BY A.ORDER_NO ASC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) B
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+		ORDER BY B.ORDER_NO ASC
+	</select>
+	
+	<!-- 마이미디어 조회 -->
+	<select id="selectMyMedia" parameterType="com.instarverse.api.v1.mymedia.vo.MyMediaVo" resultType="com.instarverse.api.v1.mymedia.vo.MyMediaVo">
+		SELECT
+			SEQ
+			, UID
+			, TYPE
+			, URL
+			, ORDER_NO
+			, TITLE
+			, SUBTITLE
+			, DESCRIPTION
+			, SALE_YN
+			, PRICE
+			, CREATED_AT
+			, SIZE
+			, MATERIALS
+			, TAG
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			my_media A
+		WHERE A.SEQ = #{seq}
+	</select>
+	
+	<!-- 마이미디어 등록 -->
+	<insert id="insertMyMedia" parameterType="com.instarverse.api.v1.mymedia.vo.MyMediaVo">
+		INSERT INTO my_media (
+			UID
+			, TYPE
+			, URL
+			, THUMBNAIL_URL
+			, ORDER_NO
+			, TITLE
+			, SUBTITLE
+			, DESCRIPTION
+			, SALE_YN
+			, PRICE
+			, CREATED_AT
+			, SIZE
+			, MATERIALS
+			, TAG
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+		) VALUES (
+			#{uid}
+			, #{type}
+			, #{url}
+			, #{thumbnail_url}
+			, #{order_no}
+			, #{title}
+			, #{subtitle}
+			, #{description}
+			, #{sale_yn}
+			, #{price}
+			, #{created_at}
+			, #{size}
+			, #{materials}
+			, #{tag}
+			, #{del_yn}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 마이미디어 수정 -->
+	<update id="updateMyMedia" parameterType="com.instarverse.api.v1.mymedia.vo.MyMediaVo">
+		UPDATE my_media SET
+			TYPE = #{type}
+			, URL = #{url}
+			, ORDER_NO = #{order_no}
+			, TITLE = #{title}
+			, SUBTITLE = #{subtitle}
+			, DESCRIPTION = #{description}
+			, SALE_YN = #{sale_yn}
+			, PRICE = #{price}
+			, CREATED_AT = #{created_at}
+			, SIZE = #{size}
+			, MATERIALS = #{materials}
+			, TAG = #{tag}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 마이미디어 삭제 -->
+	<update id="deleteMyMedia" parameterType="com.instarverse.api.v1.mymedia.vo.MyMediaVo">
+		UPDATE my_media SET
+			DEL_YN = "Y"
+			, DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+</mapper>

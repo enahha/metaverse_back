@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.faq.mapper.FaqMapper"> 
+	
+	<!-- 공지사항 리스트 맥스 페이지 -->
+	<select id="selectFaqListLastPageNum" parameterType="com.instarverse.api.v1.common.vo.CommonVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			faq A
+		WHERE 1=1
+		AND DEL_ID IS NULL
+		<if test="keyword != null and keyword != ''">
+		AND (
+			UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.CONTENTS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.CONTENTS_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+		)
+		</if>
+	</select>
+	
+	<!-- 공지사항 리스트 조회 -->
+	<select id="selectFaqList" parameterType="com.instarverse.api.v1.common.vo.CommonVo" resultType="com.instarverse.api.v1.faq.vo.FaqVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, TITLE
+					, TITLE_KO
+					, CONTENTS
+					, CONTENTS_KO
+					, REG_ID
+					, REG_TIME
+					, MOD_ID
+					, MOD_TIME
+					, DEL_ID
+					, DEL_TIME
+				FROM
+					faq A
+				WHERE 1=1
+				AND DEL_ID IS NULL
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.CONTENTS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.CONTENTS_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) B
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+		ORDER BY B.SEQ DESC
+	</select>
+	
+	
+	<!-- 공지사항 조회 -->
+	<select id="selectFaq" parameterType="com.instarverse.api.v1.faq.vo.FaqVo" resultType="com.instarverse.api.v1.faq.vo.FaqVo">
+		SELECT
+			SEQ
+			, TITLE
+			, TITLE_KO
+			, CONTENTS
+			, CONTENTS_KO
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			faq A
+		WHERE A.SEQ = #{seq}
+	</select>
+	
+	<!-- 공지사항 등록 -->
+	<insert id="insertFaq" parameterType="com.instarverse.api.v1.faq.vo.FaqVo">
+		INSERT INTO faq (
+			TITLE
+			, TITLE_KO
+			, CONTENTS
+			, CONTENTS_KO
+			, REG_ID
+			, REG_TIME
+		) VALUES (
+			#{title}
+			, #{title_ko}
+			, #{contents}
+			, #{contents_ko}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 공지사항 수정 -->
+	<update id="updateFaq" parameterType="com.instarverse.api.v1.faq.vo.FaqVo">
+		UPDATE faq SET
+			TITLE = #{title}
+			, TITLE_KO = #{title_ko}
+			, CONTENTS = #{contents}
+			, CONTENTS_KO = #{contents_ko}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 공지사항 삭제 -->
+	<update id="deleteFaq" parameterType="com.instarverse.api.v1.faq.vo.FaqVo">
+		UPDATE faq SET
+			DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+</mapper>

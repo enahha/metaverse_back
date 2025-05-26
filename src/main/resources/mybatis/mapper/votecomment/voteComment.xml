@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.votecomment.mapper.VoteCommentMapper">
+	 
+	<!-- 투표 댓글 등록 -->
+	<insert id="insertVoteComment" parameterType="com.instarverse.api.v1.votecomment.vo.VoteCommentVo">
+		<selectKey resultType="int" keyProperty="seq_parent1" order="BEFORE">
+			SELECT IFNULL(MAX(seq), 0) + 1 FROM vote_comment
+		</selectKey>
+		INSERT INTO vote_comment (
+			VOTE_SEQ
+			, SEQ_PARENT1
+			, SEQ_PARENT2
+			, SEQ_PARENT3
+			, SEQ_PARENT4
+			, SEQ_PARENT5
+			, GROUP_ORDER
+			, GROUP_LAYER
+			, CONTENTS
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		) VALUES (
+			#{vote_seq}
+			, #{seq_parent1}
+			, #{seq_parent2}
+			, #{seq_parent3}
+			, #{seq_parent4}
+			, #{seq_parent5}
+			, #{group_order}
+			, #{group_layer}
+			, #{contents}
+			, #{reg_id}
+			, SYSDATE()
+			, NULL
+			, NULL
+			, NULL
+			, NULL
+		)
+	</insert>
+	
+	<!-- 2.1 투표 답글 등록 준비 작업 -->
+	<update id="updateVoteCommentGroupOrderPlusOne" parameterType="com.instarverse.api.v1.votecomment.vo.VoteCommentVo">
+		UPDATE vote_comment SET
+			GROUP_ORDER = GROUP_ORDER + 1
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ_PARENT1 = #{seq_parent1}
+		AND SEQ_PARENT2 = #{seq_parent2}
+		AND SEQ_PARENT3 = #{seq_parent3}
+		AND SEQ_PARENT4 = #{seq_parent4}
+		AND SEQ_PARENT5 = #{seq_parent5}
+		<![CDATA[
+		AND GROUP_ORDER > #{group_order}
+		]]>
+		AND DEL_ID IS NULL
+	</update>
+	
+	<!-- 투표 답글 등록 -->
+	<insert id="insertVoteCommentReply" parameterType="com.instarverse.api.v1.votecomment.vo.VoteCommentVo">
+		INSERT INTO vote_comment (
+			VOTE_SEQ
+			, SEQ_PARENT1
+			, SEQ_PARENT2
+			, SEQ_PARENT3
+			, SEQ_PARENT4
+			, SEQ_PARENT5
+			, GROUP_ORDER
+			, GROUP_LAYER
+			, CONTENTS
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		) VALUES (
+			#{vote_seq}
+			, #{seq_parent1}
+		<choose>
+			<when test="group_layer == 1">
+				, (SELECT IFNULL(MAX(A.SEQ_PARENT2), 0) + 1
+					FROM vote_comment A
+					WHERE A.SEQ_PARENT1 = #{seq_parent1}
+					AND A.DEL_ID IS NULL)
+			</when>
+			<otherwise>
+				, #{seq_parent2}
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="group_layer == 2">
+				, (SELECT IFNULL(MAX(A.SEQ_PARENT3), 0) + 1
+					FROM vote_comment A
+					WHERE A.SEQ_PARENT1 = #{seq_parent1}
+					AND A.SEQ_PARENT2 = #{seq_parent2}
+					AND A.DEL_ID IS NULL)
+			</when>
+			<otherwise>
+				, #{seq_parent3}
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="group_layer == 3">
+				, (SELECT IFNULL(MAX(A.SEQ_PARENT4), 0) + 1
+					FROM vote_comment A
+					WHERE A.SEQ_PARENT1 = #{seq_parent1}
+					AND A.SEQ_PARENT2 = #{seq_parent2}
+					AND A.SEQ_PARENT3 = #{seq_parent3}
+					AND A.DEL_ID IS NULL)
+			</when>
+			<otherwise>
+				, #{seq_parent4}
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="group_layer == 4">
+				, (SELECT IFNULL(MAX(A.SEQ_PARENT5), 0) + 1
+					FROM vote_comment A
+					WHERE A.SEQ_PARENT1 = #{seq_parent1}
+					AND A.SEQ_PARENT2 = #{seq_parent2}
+					AND A.SEQ_PARENT3 = #{seq_parent3}
+					AND A.SEQ_PARENT4 = #{seq_parent4}
+					AND A.DEL_ID IS NULL)
+			</when>
+			<otherwise>
+				, #{seq_parent5}
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="group_layer > 5">
+				, #{group_order}
+			</when>
+			<otherwise>
+				, (SELECT IFNULL(MAX(A.GROUP_ORDER), 0) + 1
+					FROM vote_comment A
+					WHERE A.SEQ_PARENT1 = #{seq_parent1}
+					AND A.SEQ_PARENT2 = #{seq_parent2}
+					AND A.SEQ_PARENT3 = #{seq_parent3}
+					AND A.SEQ_PARENT4 = #{seq_parent4}
+					AND A.SEQ_PARENT5 = #{seq_parent5}
+					AND A.DEL_ID IS NULL)
+			</otherwise>
+		</choose>
+			, #{group_layer}
+			, #{contents}
+			, #{reg_id}
+			, SYSDATE()
+			, NULL
+			, NULL
+			, NULL
+			, NULL
+		)
+	</insert>
+	
+	<!-- 투표 댓글 수정 -->
+	<update id="updateVoteComment" parameterType="com.instarverse.api.v1.votecomment.vo.VoteCommentVo">
+		UPDATE vote_comment SET
+			CONTENTS = #{contents}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 투표 댓글 삭제 -->
+	<update id="deleteVoteComment" parameterType="com.instarverse.api.v1.votecomment.vo.VoteCommentVo">
+		UPDATE vote_comment SET
+			DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 투표 댓굴 리스트 맥스 페이지 -->
+	<select id="selectVoteCommentListLastPageNum" parameterType="com.instarverse.api.v1.votecomment.vo.VoteCommentVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			vote_comment A
+		WHERE 1=1
+		AND A.VOTE_SEQ = #{vote_seq}
+		AND A.DEL_ID IS NULL
+		<if test="reg_id != null and reg_id != ''">
+		AND A.REG_ID = #{reg_id}
+		</if>
+	</select>
+	
+	<!-- 투표 댓글 리스트 조회 -->
+	<select id="selectVoteCommentList" parameterType="com.instarverse.api.v1.votecomment.vo.VoteCommentVo" resultType="com.instarverse.api.v1.votecomment.vo.VoteCommentVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					A.SEQ
+					, A.SEQ_PARENT1
+					, A.SEQ_PARENT2
+					, A.SEQ_PARENT3
+					, A.SEQ_PARENT4
+					, A.SEQ_PARENT5
+					, A.GROUP_ORDER
+					, A.GROUP_LAYER
+					, A.CONTENTS
+					, (SELECT LIKE_CD FROM vote_comment_like WHERE VOTE_COMMENT_SEQ = A.SEQ AND REG_ID = #{uid}) AS LIKE_CD
+					, (SELECT COUNT(*) FROM vote_comment_like WHERE VOTE_COMMENT_SEQ = A.SEQ AND LIKE_CD = 'Y') AS LIKE_CNT
+					, (SELECT COUNT(*) FROM vote_comment_like WHERE VOTE_COMMENT_SEQ = A.SEQ AND LIKE_CD = 'N') AS DISLIKE_CNT
+					, (SELECT COUNT(*) - 1 FROM vote_comment WHERE VOTE_SEQ = A.VOTE_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1) AS REPLY_CNT1
+					, (SELECT COUNT(*) - 1 FROM vote_comment WHERE VOTE_SEQ = A.VOTE_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2) AS REPLY_CNT2
+					, (SELECT COUNT(*) - 1 FROM vote_comment WHERE VOTE_SEQ = A.VOTE_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2 AND SEQ_PARENT3 = A.SEQ_PARENT3) AS REPLY_CNT3
+					, (SELECT COUNT(*) - 1 FROM vote_comment WHERE VOTE_SEQ = A.VOTE_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2 AND SEQ_PARENT3 = A.SEQ_PARENT3 AND SEQ_PARENT4 = A.SEQ_PARENT4) AS REPLY_CNT4
+					, (SELECT COUNT(*) - 1 FROM vote_comment WHERE VOTE_SEQ = A.VOTE_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2 AND SEQ_PARENT3 = A.SEQ_PARENT3 AND SEQ_PARENT4 = A.SEQ_PARENT4 AND SEQ_PARENT5 = A.SEQ_PARENT5) AS REPLY_CNT5
+					, A.REG_ID
+					, substring_index(A.REG_ID, '@', 1) AS REG_NAME
+					, date_format(A.REG_TIME, '%Y.%m.%d %H:%S') AS REG_TIME
+					, false AS VISIBLE_REPLY_INPUT
+					, if(A.GROUP_LAYER = 0, true, false) AS VISIBLE_CHILD
+				FROM
+					vote_comment A
+				WHERE 1=1
+				AND A.VOTE_SEQ = #{vote_seq}
+				AND A.DEL_ID IS NULL
+		<if test="reg_id != null and reg_id != ''">
+				AND A.REG_ID = #{reg_id}
+		</if>
+				ORDER BY A.SEQ_PARENT1 DESC, A.SEQ_PARENT2, A.SEQ_PARENT3, A.SEQ_PARENT4, A.SEQ_PARENT5, GROUP_ORDER
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) A
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<!-- 투표 댓글 조회 -->
+	<select id="selectVoteComment" parameterType="com.instarverse.api.v1.votecomment.vo.VoteCommentVo" resultType="com.instarverse.api.v1.votecomment.vo.VoteCommentVo">
+		SELECT
+			SEQ
+			, VOTE_SEQ
+			, SEQ_PARENT1
+			, SEQ_PARENT2
+			, SEQ_PARENT3
+			, SEQ_PARENT4
+			, SEQ_PARENT5
+			, GROUP_ORDER
+			, GROUP_LAYER
+			, CONTENTS
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			vote A
+		WHERE A.SEQ = #{seq}
+		AND A.DEL_YN = 'N'
+	</select>
+	
+</mapper>

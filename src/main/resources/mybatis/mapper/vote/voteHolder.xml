@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.vote.mapper.VoteHolderMapper"> 
+	
+	<!-- 투표 홀더 리스트 등록 -->
+	<insert id="insertVoteHolderList" parameterType="com.instarverse.api.v1.vote.vo.VoteVo">
+		INSERT INTO vote_holder (
+			VOTE_SEQ
+			, HOLDER_NO
+			, ADDRESS
+			, AMOUNT
+			, AGREE_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		) VALUES
+		<foreach item="item" index="index" collection="voteHolderList" separator=",">
+			(
+				#{seq}
+				, #{item.holder_no}
+				, #{item.address}
+				, #{item.amount}
+				, #{item.agree_yn}
+				, #{reg_id}
+				, SYSDATE()
+				, NULL
+				, NULL
+				, NULL
+				, NULL
+			)
+		</foreach>
+		<!-- 
+		<selectKey resultType="int" keyProperty="seq" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 -->
+	</insert>
+	
+	<!-- 투표 LP 홀더 리스트 등록 -->
+	<insert id="insertVoteLpHolderList" parameterType="com.instarverse.api.v1.vote.vo.VoteVo">
+		INSERT INTO vote_holder (
+			VOTE_SEQ
+			, HOLDER_NO
+			, ADDRESS
+			, AMOUNT
+			, AGREE_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		)
+		<foreach item="item" index="index" collection="voteHolderList" separator="UNION">
+			SELECT
+				#{seq}
+				, (SELECT IFNULL(MAX(HOLDER_NO) + 1, 1) + #{index} FROM vote_holder X WHERE X.VOTE_SEQ = #{seq})
+				, #{item.address}
+				, #{item.amount}
+				, #{item.agree_yn}
+				, #{reg_id}
+				, SYSDATE()
+				, NULL
+				, NULL
+				, NULL
+				, NULL
+			FROM
+				DUAL
+			WHERE NOT EXISTS (
+				SELECT * FROM vote_holder Y WHERE Y.VOTE_SEQ = #{seq} AND Y.ADDRESS = #{item.address}
+			)
+		</foreach>
+	</insert>
+	
+	<!-- 투표 홀더 MIN(SEQ)-1 조회 -->
+	<!-- <select id="selectVoteHolderFirstSeqMinusOne" parameterType="com.instarverse.api.v1.vote.vo.VoteHolderVo" resultType="integer">
+		SELECT
+			IFNULL(MIN(SEQ) - 1, -1)
+		FROM
+			vote_holder A
+		WHERE 1=1
+		AND A.VOTE_SEQ = #{vote_seq}
+	</select> -->
+	
+	<!-- 투표 홀더 수정 - HOLDER_NO 정렬 수정 -->
+	<!-- <update id="updateVoteHolderHolderNo" parameterType="com.instarverse.api.v1.vote.vo.VoteHolderVo">
+		UPDATE vote_holder SET
+			HOLDER_NO = SEQ - #{first_seq_minus_one}
+		WHERE VOTE_SEQ = #{vote_seq}
+	</update> -->
+	
+	<!-- 투표 홀더 조회 -->
+	<select id="selectVoteHolderByAddress" parameterType="com.instarverse.api.v1.vote.vo.VoteHolderVo" resultType="com.instarverse.api.v1.vote.vo.VoteHolderVo">
+		SELECT
+			SEQ
+			, VOTE_SEQ
+			, HOLDER_NO
+			, ADDRESS
+			, AMOUNT
+			, AGREE_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			vote_holder A
+		WHERE 1=1
+		AND A.ADDRESS = #{address}
+	</select>
+	
+	<!-- 투표 홀더 리스트 맥스 페이지 -->
+	<select id="selectVoteHolderListLastPageNum" parameterType="com.instarverse.api.v1.vote.vo.VoteHolderVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			vote_holder A
+		WHERE 1=1
+		AND VOTE_SEQ = #{vote_seq}
+		
+		<if test="keyword != null and keyword != ''">
+			AND (
+				<!-- A.HOLDER_NO LIKE CONCAT('%', #{keyword}, '%')
+				OR -->
+				UPPER(A.ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			)
+		</if>
+	</select>
+	
+	<!-- 투표 홀더 리스트 조회 -->
+	<select id="selectVoteHolderList" parameterType="com.instarverse.api.v1.vote.vo.VoteHolderVo" resultType="com.instarverse.api.v1.vote.vo.VoteHolderVo">
+		SELECT
+			*
+			, ROWNUM AS HOLDER_NO
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, VOTE_SEQ
+					<!-- , HOLDER_NO -->
+					, ADDRESS
+					, AMOUNT
+					, AGREE_YN
+				FROM
+					vote_holder A
+				WHERE 1=1
+				AND VOTE_SEQ = #{vote_seq}
+				
+		<if test="keyword != null and keyword != ''">
+				AND (
+					<!-- A.HOLDER_NO LIKE CONCAT('%', #{keyword}, '%')
+					OR -->
+					UPPER(A.ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				
+				ORDER BY A.SEQ
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) A
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<!-- 투표 홀더 수정 - 투표하기 -->
+	<update id="updateVoteHolder" parameterType="com.instarverse.api.v1.vote.vo.VoteHolderVo">
+		UPDATE vote_holder SET
+			AGREE_YN = #{agree_yn}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE VOTE_SEQ = #{vote_seq}
+		AND ADDRESS = #{address}
+	</update>
+	
+</mapper>

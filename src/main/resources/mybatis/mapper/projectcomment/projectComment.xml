@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.projectcomment.mapper.ProjectCommentMapper">
+	 
+	<!-- 프로젝트 댓글 등록 -->
+	<insert id="insertProjectComment" parameterType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo">
+		<selectKey resultType="int" keyProperty="seq_parent1" order="BEFORE">
+			SELECT IFNULL(MAX(seq), 0) + 1 FROM project_comment
+		</selectKey>
+		INSERT INTO project_comment (
+			PROJECT_SEQ
+			, SEQ_PARENT1
+			, SEQ_PARENT2
+			, SEQ_PARENT3
+			, SEQ_PARENT4
+			, SEQ_PARENT5
+			, GROUP_ORDER
+			, GROUP_LAYER
+			, CONTENTS
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		) VALUES (
+			#{project_seq}
+			, #{seq_parent1}
+			, #{seq_parent2}
+			, #{seq_parent3}
+			, #{seq_parent4}
+			, #{seq_parent5}
+			, #{group_order}
+			, #{group_layer}
+			, #{contents}
+			, #{reg_id}
+			, SYSDATE()
+			, NULL
+			, NULL
+			, NULL
+			, NULL
+		)
+	</insert>
+	
+	<!-- 2.1 프로젝트 답글 등록 준비 작업 -->
+	<update id="updateProjectCommentGroupOrderPlusOne" parameterType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo">
+		UPDATE project_comment SET
+			GROUP_ORDER = GROUP_ORDER + 1
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ_PARENT1 = #{seq_parent1}
+		AND SEQ_PARENT2 = #{seq_parent2}
+		AND SEQ_PARENT3 = #{seq_parent3}
+		AND SEQ_PARENT4 = #{seq_parent4}
+		AND SEQ_PARENT5 = #{seq_parent5}
+		<![CDATA[
+		AND GROUP_ORDER > #{group_order}
+		]]>
+		AND DEL_ID IS NULL
+	</update>
+	
+	<!-- 프로젝트 답글 등록 -->
+	<insert id="insertProjectCommentReply" parameterType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo">
+		INSERT INTO project_comment (
+			PROJECT_SEQ
+			, SEQ_PARENT1
+			, SEQ_PARENT2
+			, SEQ_PARENT3
+			, SEQ_PARENT4
+			, SEQ_PARENT5
+			, GROUP_ORDER
+			, GROUP_LAYER
+			, CONTENTS
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		) VALUES (
+			#{project_seq}
+			, #{seq_parent1}
+		<choose>
+			<when test="group_layer == 1">
+				, (SELECT IFNULL(MAX(A.SEQ_PARENT2), 0) + 1
+					FROM project_comment A
+					WHERE A.SEQ_PARENT1 = #{seq_parent1}
+					AND A.DEL_ID IS NULL)
+			</when>
+			<otherwise>
+				, #{seq_parent2}
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="group_layer == 2">
+				, (SELECT IFNULL(MAX(A.SEQ_PARENT3), 0) + 1
+					FROM project_comment A
+					WHERE A.SEQ_PARENT1 = #{seq_parent1}
+					AND A.SEQ_PARENT2 = #{seq_parent2}
+					AND A.DEL_ID IS NULL)
+			</when>
+			<otherwise>
+				, #{seq_parent3}
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="group_layer == 3">
+				, (SELECT IFNULL(MAX(A.SEQ_PARENT4), 0) + 1
+					FROM project_comment A
+					WHERE A.SEQ_PARENT1 = #{seq_parent1}
+					AND A.SEQ_PARENT2 = #{seq_parent2}
+					AND A.SEQ_PARENT3 = #{seq_parent3}
+					AND A.DEL_ID IS NULL)
+			</when>
+			<otherwise>
+				, #{seq_parent4}
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="group_layer == 4">
+				, (SELECT IFNULL(MAX(A.SEQ_PARENT5), 0) + 1
+					FROM project_comment A
+					WHERE A.SEQ_PARENT1 = #{seq_parent1}
+					AND A.SEQ_PARENT2 = #{seq_parent2}
+					AND A.SEQ_PARENT3 = #{seq_parent3}
+					AND A.SEQ_PARENT4 = #{seq_parent4}
+					AND A.DEL_ID IS NULL)
+			</when>
+			<otherwise>
+				, #{seq_parent5}
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="group_layer > 5">
+				, #{group_order}
+			</when>
+			<otherwise>
+				, (SELECT IFNULL(MAX(A.GROUP_ORDER), 0) + 1
+					FROM project_comment A
+					WHERE A.SEQ_PARENT1 = #{seq_parent1}
+					AND A.SEQ_PARENT2 = #{seq_parent2}
+					AND A.SEQ_PARENT3 = #{seq_parent3}
+					AND A.SEQ_PARENT4 = #{seq_parent4}
+					AND A.SEQ_PARENT5 = #{seq_parent5}
+					AND A.DEL_ID IS NULL)
+			</otherwise>
+		</choose>
+			, #{group_layer}
+			, #{contents}
+			, #{reg_id}
+			, SYSDATE()
+			, NULL
+			, NULL
+			, NULL
+			, NULL
+		)
+	</insert>
+	
+	<!-- 프로젝트 댓글 수정 -->
+	<update id="updateProjectComment" parameterType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo">
+		UPDATE project_comment SET
+			CONTENTS = #{contents}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 프로젝트 댓글 삭제 -->
+	<update id="deleteProjectComment" parameterType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo">
+		UPDATE project_comment SET
+			DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 프로젝트 댓굴 리스트 맥스 페이지 -->
+	<select id="selectProjectCommentListLastPageNum" parameterType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			project_comment A
+		WHERE 1=1
+		AND A.PROJECT_SEQ = #{project_seq}
+		AND A.DEL_ID IS NULL
+		<if test="reg_id != null and reg_id != ''">
+		AND A.REG_ID = #{reg_id}
+		</if>
+	</select>
+	
+	<!-- 프로젝트 댓글 리스트 조회 -->
+	<select id="selectProjectCommentList" parameterType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo" resultType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					A.SEQ
+					, A.SEQ_PARENT1
+					, A.SEQ_PARENT2
+					, A.SEQ_PARENT3
+					, A.SEQ_PARENT4
+					, A.SEQ_PARENT5
+					, A.GROUP_ORDER
+					, A.GROUP_LAYER
+					, A.CONTENTS
+					, (SELECT LIKE_CD FROM project_comment_like WHERE PROJECT_COMMENT_SEQ = A.SEQ AND REG_ID = #{uid}) AS LIKE_CD
+					, (SELECT COUNT(*) FROM project_comment_like WHERE PROJECT_COMMENT_SEQ = A.SEQ AND LIKE_CD = 'Y') AS LIKE_CNT
+					, (SELECT COUNT(*) FROM project_comment_like WHERE PROJECT_COMMENT_SEQ = A.SEQ AND LIKE_CD = 'N') AS DISLIKE_CNT
+					, (SELECT COUNT(*) - 1 FROM project_comment WHERE PROJECT_SEQ = A.PROJECT_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1) AS REPLY_CNT1
+					, (SELECT COUNT(*) - 1 FROM project_comment WHERE PROJECT_SEQ = A.PROJECT_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2) AS REPLY_CNT2
+					, (SELECT COUNT(*) - 1 FROM project_comment WHERE PROJECT_SEQ = A.PROJECT_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2 AND SEQ_PARENT3 = A.SEQ_PARENT3) AS REPLY_CNT3
+					, (SELECT COUNT(*) - 1 FROM project_comment WHERE PROJECT_SEQ = A.PROJECT_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2 AND SEQ_PARENT3 = A.SEQ_PARENT3 AND SEQ_PARENT4 = A.SEQ_PARENT4) AS REPLY_CNT4
+					, (SELECT COUNT(*) - 1 FROM project_comment WHERE PROJECT_SEQ = A.PROJECT_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2 AND SEQ_PARENT3 = A.SEQ_PARENT3 AND SEQ_PARENT4 = A.SEQ_PARENT4 AND SEQ_PARENT5 = A.SEQ_PARENT5) AS REPLY_CNT5
+					, A.REG_ID
+					, substring_index(A.REG_ID, '@', 1) AS REG_NAME
+					, date_format(A.REG_TIME, '%Y.%m.%d %H:%S') AS REG_TIME
+					, false AS VISIBLE_REPLY_INPUT
+					, if(A.GROUP_LAYER = 0, true, false) AS VISIBLE_CHILD
+				FROM
+					project_comment A
+				WHERE 1=1
+				AND A.PROJECT_SEQ = #{project_seq}
+				AND A.DEL_ID IS NULL
+		<if test="reg_id != null and reg_id != ''">
+				AND A.REG_ID = #{reg_id}
+		</if>
+				ORDER BY A.SEQ_PARENT1 DESC, A.SEQ_PARENT2, A.SEQ_PARENT3, A.SEQ_PARENT4, A.SEQ_PARENT5, GROUP_ORDER
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) A
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<!-- 프로젝트 댓글 조회 -->
+	<select id="selectProjectComment" parameterType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo" resultType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo">
+		SELECT
+			SEQ
+			, PROJECT_SEQ
+			, SEQ_PARENT1
+			, SEQ_PARENT2
+			, SEQ_PARENT3
+			, SEQ_PARENT4
+			, SEQ_PARENT5
+			, GROUP_ORDER
+			, GROUP_LAYER
+			, CONTENTS
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			project A
+		WHERE A.SEQ = #{seq}
+		AND A.DEL_YN = 'N'
+	</select>
+	
+	<!-- MY 프로젝트 댓굴 리스트 맥스 페이지 -->
+	<select id="selectMyProjectCommentListLastPageNum" parameterType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*) = 0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			project_comment A
+		WHERE 1=1
+			AND A.PROJECT_SEQ IN (
+				SELECT B.seq
+				FROM project B
+				WHERE B.reg_id = #{uid}
+			)
+			AND A.DEL_ID IS NULL
+	</select>
+	
+	<!-- MY 프로젝트 댓글 리스트 조회 -->
+	<select id="selectMyProjectCommentList" parameterType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo" resultType="com.instarverse.api.v1.projectcomment.vo.ProjectCommentVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					A.SEQ
+					, A.SEQ_PARENT1
+					, A.SEQ_PARENT2
+					, A.SEQ_PARENT3
+					, A.SEQ_PARENT4
+					, A.SEQ_PARENT5
+					, A.GROUP_ORDER
+					, A.GROUP_LAYER
+					, A.CONTENTS
+					, (SELECT LIKE_CD FROM project_comment_like WHERE PROJECT_COMMENT_SEQ = A.SEQ AND REG_ID = #{uid}) AS LIKE_CD
+					, (SELECT COUNT(*) FROM project_comment_like WHERE PROJECT_COMMENT_SEQ = A.SEQ AND LIKE_CD = 'Y') AS LIKE_CNT
+					, (SELECT COUNT(*) FROM project_comment_like WHERE PROJECT_COMMENT_SEQ = A.SEQ AND LIKE_CD = 'N') AS DISLIKE_CNT
+					, (SELECT COUNT(*) - 1 FROM project_comment WHERE PROJECT_SEQ = A.PROJECT_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1) AS REPLY_CNT1
+					, (SELECT COUNT(*) - 1 FROM project_comment WHERE PROJECT_SEQ = A.PROJECT_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2) AS REPLY_CNT2
+					, (SELECT COUNT(*) - 1 FROM project_comment WHERE PROJECT_SEQ = A.PROJECT_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2 AND SEQ_PARENT3 = A.SEQ_PARENT3) AS REPLY_CNT3
+					, (SELECT COUNT(*) - 1 FROM project_comment WHERE PROJECT_SEQ = A.PROJECT_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2 AND SEQ_PARENT3 = A.SEQ_PARENT3 AND SEQ_PARENT4 = A.SEQ_PARENT4) AS REPLY_CNT4
+					, (SELECT COUNT(*) - 1 FROM project_comment WHERE PROJECT_SEQ = A.PROJECT_SEQ AND SEQ_PARENT1 = A.SEQ_PARENT1 AND SEQ_PARENT2 = A.SEQ_PARENT2 AND SEQ_PARENT3 = A.SEQ_PARENT3 AND SEQ_PARENT4 = A.SEQ_PARENT4 AND SEQ_PARENT5 = A.SEQ_PARENT5) AS REPLY_CNT5
+					, A.REG_ID
+					, substring_index(A.REG_ID, '@', 1) AS REG_NAME
+					, date_format(A.REG_TIME, '%Y.%m.%d %H:%S') AS REG_TIME
+					, false AS VISIBLE_REPLY_INPUT
+					, if(A.GROUP_LAYER = 0, true, false) AS VISIBLE_CHILD
+					, P.title AS PROJECT_TITLE
+				FROM
+					project_comment A
+				JOIN project P ON A.PROJECT_SEQ = P.seq
+				WHERE 1=1
+				AND A.PROJECT_SEQ IN (
+					SELECT B.seq
+					FROM project B
+					WHERE B.reg_id = #{uid}
+				)
+				AND A.DEL_ID IS NULL
+				ORDER BY A.SEQ_PARENT1 DESC, A.SEQ_PARENT2, A.SEQ_PARENT3, A.SEQ_PARENT4, A.SEQ_PARENT5, GROUP_ORDER
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) A
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+	</select>
+</mapper>

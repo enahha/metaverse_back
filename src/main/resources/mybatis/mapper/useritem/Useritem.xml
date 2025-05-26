@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.userItem.mapper.UserItemMapper"> 
+	
+	<!-- 소유 아이템 리스트 맥스 페이지 -->
+	<select id="selectUserItemListLastPageNum" parameterType="com.instarverse.api.v1.common.vo.CommonVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			user_item A
+		WHERE 1=1
+		AND DEL_ID IS NULL
+		<if test="keyword != null and keyword != ''">
+		AND (
+			UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.CONTENTS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.CONTENTS_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+		)
+		</if>
+	</select>
+	
+	<!-- 소유 아이템 리스트 조회 -->
+	<select id="selectUserItemList" parameterType="com.instarverse.api.v1.common.vo.CommonVo" resultType="com.instarverse.api.v1.userItem.vo.UserItemVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, UID
+					, IN_USE
+					, ITEM_SEQ
+					, PLAN_SEQ
+					, USE_START_TIME
+					, USE_END_TIME
+					, DEL_YN
+					, REG_ID
+					, REG_TIME
+					, MOD_ID
+					, MOD_TIME
+					, DEL_ID
+					, DEL_TIME
+				FROM
+					user_item A
+				WHERE 1=1
+				AND DEL_ID IS NULL
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.CONTENTS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.CONTENTS_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) B
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+		ORDER BY B.SEQ DESC
+	</select>
+	
+	<!-- 유저별 소유 아이템 리스트 조회 -->
+	<select id="selectUserItemListByUid" parameterType="com.instarverse.api.v1.userItem.vo.UserItemVo" resultType="com.instarverse.api.v1.userItem.vo.UserItemVo">
+		SELECT
+			SEQ
+			, UID
+			, IN_USE
+			, ITEM_SEQ
+			, PLAN_SEQ
+			, USE_START_TIME
+			, USE_END_TIME
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			user_item A
+		WHERE 1=1
+		AND UID = #{uid}
+		AND DEL_ID IS NULL
+	</select>
+	
+	<!-- 소유 아이템 조회 -->
+	<select id="selectUserItem" parameterType="com.instarverse.api.v1.userItem.vo.UserItemVo" resultType="com.instarverse.api.v1.userItem.vo.UserItemVo">
+		SELECT
+			SEQ
+			, UID
+			, IN_USE
+			, ITEM_SEQ
+			, PLAN_SEQ
+			, USE_START_TIME
+			, USE_END_TIME
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			user_item A
+		WHERE A.SEQ = #{seq}
+	</select>
+	
+	<!-- 소유 아이템 등록 -->
+	<insert id="insertUserItem" parameterType="com.instarverse.api.v1.userItem.vo.UserItemVo">
+		INSERT INTO user_item (
+			UID
+			, IN_USE
+			, ITEM_SEQ
+			, PLAN_SEQ
+			, USE_START_TIME
+			, USE_END_TIME
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+		) VALUES (
+			#{uid}
+			, #{in_use}
+			, #{item_seq}
+			, #{plan_seq}
+			, #{use_start_time}
+			, #{use_end_time}
+			, #{del_yn}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 소유 아이템 수정 -->
+	<update id="updateUserItem" parameterType="com.instarverse.api.v1.userItem.vo.UserItemVo">
+		UPDATE user_item SET
+			SEQ = #{seq}
+			, UID = #{uid}
+			, IN_USE = #{in_use}
+			, ITEM_SEQ = #{item_seq}
+			, PLAN_SEQ = #{plan_seq}
+			, USE_START_TIME = #{use_start_time}
+			, USE_END_TIME = #{use_end_time}
+			, DEL_YN = #{del_yn}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 소유 아이템 삭제 -->
+	<update id="deleteUserItem" parameterType="com.instarverse.api.v1.userItem.vo.UserItemVo">
+		UPDATE user_item SET
+			DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+</mapper>

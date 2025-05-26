@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.project.mapper.ProjectMapper"> 
+	
+	<!-- 프로젝트 등록 -->
+	<insert id="insertProject" parameterType="com.instarverse.api.v1.project.vo.ProjectVo" useGeneratedKeys="true" keyProperty="seq">
+		INSERT INTO project (
+			TITLE
+			, TITLE_KO
+			, STATUS_CD
+			, MAIN_HALL
+			, SYMBOL
+			, SUBTITLE
+			, EXHIBITIONHALL_SEQ
+			, BANNER_URL
+			, POSTAR_URL
+			, DESCRIPTION
+			, DESCRIPTION_KO
+			, DISPLAY_START_TIME
+			, DISPLAY_END_TIME
+			, REPRESENTATIVE_SNS_ID
+			, ARTIST_DETAILS
+			, EMAIL
+			, INSTARGRAM
+			, TWITTER
+			, DISCORD
+			, TELEGRAM
+			, VIEW
+			, PRODUCTION_BACKGROUND
+			, NICKNAME
+			, CONTRACT_STATUS_CD
+			, LOGO_IMAGE
+			, DOCS
+			, BLOG
+			, MEDIUM
+			, GITHUB
+			, META
+			, MAINNET
+			, TAG
+			, SUMMARY
+			, SUMMARY_KO
+			, DISPLAY_CD
+			, TYPE
+			, WALLET_ADDRESS
+			, OFFICIAL_WEBSITE
+			, OFFICIAL_EMAIL
+			, LP_CONTRACT_ADDRESS_1
+			, LP_CONTRACT_ADDRESS_2
+			, LP_CONTRACT_ADDRESS_3
+			, LP_CONTRACT_ADDRESS_4
+			, LP_CONTRACT_ADDRESS_5
+			, LP_CONTRACT_ADDRESS_6
+			, LP_CONTRACT_ADDRESS_7
+			, LP_CONTRACT_ADDRESS_8
+			, LP_CONTRACT_ADDRESS_9
+			, LP_CONTRACT_ADDRESS_10
+			, CONTRACT_ADDRESS
+			, COLLECTION_URL
+			, MEDIA_URL_PREFIX
+			, PLATFORM_DEPOSIT_BALANCE
+			, PLATFORM_YIELD
+			, PLATFORM_TOTAL_BALANCE
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		) VALUES (
+		    #{title}
+		    , #{title_ko}
+		    , #{status_cd}
+		    , #{main_hall}
+		    , #{symbol}
+		    , #{subtitle}
+		    , #{exhibitionhall_seq}
+		    , #{banner_url}
+		    , #{postar_url}
+		    , #{description}
+		    , #{description_ko}
+		    , #{display_start_time}
+		    , #{display_end_time}
+		    , #{representative_sns_id}
+		    , #{artist_details}
+		    , #{email}
+		    , #{instargram}
+		    , #{twitter}
+		    , #{discord}
+		    , #{telegram}
+		    , #{view}
+		    , #{production_background}
+		    , #{nickname}
+		    , #{contract_status_cd}
+		    , #{logo_image}
+		    , #{docs}
+		    , #{blog}
+		    , #{medium}
+		    , #{github}
+		    , #{meta}
+		    , #{mainnet}
+		    , #{tag}
+		    , #{summary}
+		    , #{summary_ko}
+		    , #{display_cd}
+		    , #{type}
+		    , #{wallet_address}
+		    , #{official_website}
+		    , #{official_email}
+		    , #{lp_contract_address_1}
+		    , #{lp_contract_address_2}
+		    , #{lp_contract_address_3}
+		    , #{lp_contract_address_4}
+		    , #{lp_contract_address_5}
+		    , #{lp_contract_address_6}
+		    , #{lp_contract_address_7}
+		    , #{lp_contract_address_8}
+		    , #{lp_contract_address_9}
+		    , #{lp_contract_address_10}
+		    , #{contract_address}
+		    , #{collection_url}
+		    , #{media_url_prefix}
+		    , #{platform_deposit_balance}
+		    , #{platform_yield}
+		    , #{platform_total_balance}
+		    , #{del_yn}
+		    , #{reg_id}
+			, SYSDATE()
+			, NULL
+			, NULL
+			, NULL
+			, NULL
+		)
+		<selectKey resultType="int" keyProperty="seq" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<!-- 프로젝트 조회 -->
+	<select id="selectProject" parameterType="com.instarverse.api.v1.project.vo.ProjectVo" resultType="com.instarverse.api.v1.project.vo.ProjectVo">
+		SELECT
+			SEQ
+			, TITLE
+			, TITLE_KO
+			, STATUS_CD
+			, MAIN_HALL
+			, SYMBOL
+			, SUBTITLE
+			, EXHIBITIONHALL_SEQ
+			, BANNER_URL
+			, POSTAR_URL
+			, DESCRIPTION
+			, DESCRIPTION_KO
+			, DISPLAY_START_TIME
+			, DISPLAY_END_TIME
+			, REPRESENTATIVE_SNS_ID
+			, ARTIST_DETAILS
+			, EMAIL
+			, INSTARGRAM
+			, TWITTER
+			, DISCORD
+			, TELEGRAM
+			, VIEW
+			, PRODUCTION_BACKGROUND
+			, NICKNAME
+			, CONTRACT_STATUS_CD
+			, LOGO_IMAGE
+			, DOCS
+			, BLOG
+			, MEDIUM
+			, GITHUB
+			, META
+			, MAINNET
+			, TAG
+			, SUMMARY
+			, SUMMARY_KO
+			, DISPLAY_CD
+			, TYPE
+			, WALLET_ADDRESS
+			, OFFICIAL_WEBSITE
+			, OFFICIAL_EMAIL
+			, LP_CONTRACT_ADDRESS_1
+			, LP_CONTRACT_ADDRESS_2
+			, LP_CONTRACT_ADDRESS_3
+			, LP_CONTRACT_ADDRESS_4
+			, LP_CONTRACT_ADDRESS_5
+			, LP_CONTRACT_ADDRESS_6
+			, LP_CONTRACT_ADDRESS_7
+			, LP_CONTRACT_ADDRESS_8
+			, LP_CONTRACT_ADDRESS_9
+			, LP_CONTRACT_ADDRESS_10
+			, CONTRACT_ADDRESS
+			, COLLECTION_URL
+			, MEDIA_URL_PREFIX
+			, PLATFORM_DEPOSIT_BALANCE
+			, PLATFORM_YIELD
+			, PLATFORM_TOTAL_BALANCE
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+		FROM
+			project A
+		WHERE 1=1
+		AND A.SEQ = #{seq}
+	</select>
+	
+	<!-- 조회수 증가 -->
+	<update id="updateProjectView" parameterType="int">
+	    UPDATE project
+	    SET VIEW = VIEW + 1
+	    WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 프로젝트 삭제 -->
+	<update id="deleteProject" parameterType="com.instarverse.api.v1.project.vo.ProjectVo">
+		UPDATE project SET
+			STATUS_CD = #{status_cd}
+			, DEL_YN = #{del_yn}
+			, DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 프로젝트 리스트 맥스 페이지 -->
+	<select id="selectProjectListLastPageNum" parameterType="com.instarverse.api.v1.project.vo.ProjectVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			project A
+		WHERE 1=1
+		
+		<if test="keyword != null and keyword != ''">
+			AND (
+				UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.SUMMARY) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.SUMMARY_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.TAG) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			)
+		</if>
+		AND A.DEL_YN = 'N'
+		AND STATUS_CD >= #{status_cd}
+		<if test="reg_id != null and reg_id != ''">
+			AND A.REG_ID = #{reg_id}
+		</if>
+	</select>
+	
+	<!-- 프로젝트 리스트 조회 -->
+	<select id="selectProjectList" parameterType="com.instarverse.api.v1.project.vo.ProjectVo" resultType="com.instarverse.api.v1.project.vo.ProjectVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, STATUS_CD
+					, MAIN_HALL
+					, MAINNET
+					, TAG
+					, TYPE
+					, TITLE
+					, TITLE_KO
+					, NICKNAME
+					, SUBTITLE
+					, DESCRIPTION
+					, CONTRACT_ADDRESS
+					, COLLECTION_URL
+					, POSTAR_URL
+					, DISPLAY_START_TIME
+					, DISPLAY_END_TIME
+					, REG_ID
+					, REG_TIME
+				FROM
+					project A
+				WHERE 1=1
+				AND A.DEL_YN = 'N'
+		<choose>
+			<when test="status_cd == '40'">
+				AND STATUS_CD = #{status_cd}
+			</when>
+			<otherwise>
+				AND STATUS_CD >= #{status_cd}
+			</otherwise>
+		</choose>
+		<if test="reg_id != null and reg_id != ''">
+				AND A.REG_ID = #{reg_id}
+		</if>
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.SUMMARY) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.SUMMARY_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TAG) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) A
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+	</select>
+		
+	<!-- 프로젝트 리스트 조회(인기순위 순 view순) -->
+	<select id="selectProjectListAsView" parameterType="int" resultType="com.instarverse.api.v1.project.vo.ProjectVo">
+		SELECT
+			SEQ
+			, TITLE
+			, TITLE_KO
+			, NICKNAME
+			, STATUS_CD
+			, SUBTITLE
+			, POSTAR_URL
+			, DISPLAY_START_TIME
+			, DISPLAY_END_TIME
+		FROM 
+			project A
+		WHERE A.DEL_YN = 'N'
+		AND STATUS_CD >= 20
+		ORDER BY A.view DESC
+		LIMIT #{limit}
+	</select>
+	
+	<!-- 프로젝트 리스트 조회(등록 순 view순) -->
+	<select id="selectProjectListAsRegTime" parameterType="int" resultType="com.instarverse.api.v1.project.vo.ProjectVo">
+		SELECT
+			SEQ
+			, TITLE
+			, TITLE_KO
+			, NICKNAME
+			, STATUS_CD
+			, SUBTITLE
+			, POSTAR_URL
+			, DISPLAY_START_TIME
+			, DISPLAY_END_TIME
+		FROM 
+			project A
+		WHERE A.DEL_YN = 'N'
+		AND STATUS_CD >= 20
+		ORDER BY A.REG_TIME DESC
+		LIMIT #{limit}
+	</select>
+	
+	<!-- 프로젝트 수정 -->
+	<update id="updateProject" parameterType="com.instarverse.api.v1.project.vo.ProjectVo">
+		UPDATE project SET
+			TITLE = #{title}
+			, TITLE_KO = #{title_ko}
+			, STATUS_CD = #{status_cd}
+			, MAIN_HALL = #{main_hall}
+			, SYMBOL = #{symbol}
+			, SUBTITLE = #{subtitle}
+			, EXHIBITIONHALL_SEQ = #{exhibitionhall_seq}
+			, BANNER_URL = #{banner_url}
+			, POSTAR_URL = #{postar_url}
+			, DESCRIPTION = #{description}
+			, DESCRIPTION_KO = #{description_ko}
+			, DISPLAY_START_TIME = #{display_start_time}
+			, DISPLAY_END_TIME = #{display_end_time}
+			, REPRESENTATIVE_SNS_ID = #{representative_sns_id}
+			, ARTIST_DETAILS = #{artist_details}
+			, EMAIL = #{email}
+			, INSTARGRAM = #{instargram}
+			, TWITTER = #{twitter}
+			, DISCORD = #{discord}
+			, TELEGRAM = #{telegram}
+			, VIEW = #{view}
+			, PRODUCTION_BACKGROUND = #{production_background}
+			, NICKNAME = #{nickname}
+			, CONTRACT_STATUS_CD = #{contract_status_cd}
+			, LOGO_IMAGE = #{logo_image}
+			, DOCS = #{docs}
+			, BLOG = #{blog}
+			, MEDIUM = #{medium}
+			, GITHUB = #{github}
+			, META = #{meta}
+			, MAINNET = #{mainnet}
+			, TAG = #{tag}
+			, SUMMARY = #{summary}
+			, SUMMARY_KO = #{summary_ko}
+			, DISPLAY_CD = #{display_cd}
+			, TYPE = #{type}
+			, WALLET_ADDRESS = #{wallet_address}
+			, OFFICIAL_WEBSITE = #{official_website}
+			, OFFICIAL_EMAIL = #{official_email}
+			, LP_CONTRACT_ADDRESS_1 = #{lp_contract_address_1}
+			, LP_CONTRACT_ADDRESS_2 = #{lp_contract_address_2}
+			, LP_CONTRACT_ADDRESS_3 = #{lp_contract_address_3}
+			, LP_CONTRACT_ADDRESS_4 = #{lp_contract_address_4}
+			, LP_CONTRACT_ADDRESS_5 = #{lp_contract_address_5}
+			, LP_CONTRACT_ADDRESS_6 = #{lp_contract_address_6}
+			, LP_CONTRACT_ADDRESS_7 = #{lp_contract_address_7}
+			, LP_CONTRACT_ADDRESS_8 = #{lp_contract_address_8}
+			, LP_CONTRACT_ADDRESS_9 = #{lp_contract_address_9}
+			, LP_CONTRACT_ADDRESS_10 = #{lp_contract_address_10}
+			, PLATFORM_DEPOSIT_BALANCE = #{platform_deposit_balance}
+			, PLATFORM_YIELD = #{platform_yield}
+			, PLATFORM_TOTAL_BALANCE = #{platform_total_balance}
+			, DEL_YN = #{del_yn}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 프로젝트 상태 업데이트 -->
+	<update id="updateProjectStatusCd" parameterType="com.instarverse.api.v1.project.vo.ProjectVo">
+		UPDATE project SET
+			STATUS_CD = #{status_cd}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- contract address 업데이트 -->
+	<update id="updateProjectContractAddress" parameterType="com.instarverse.api.v1.project.vo.ProjectVo">
+		UPDATE project
+		SET CONTRACT_ADDRESS = #{contract_address}
+			, MEDIA_URL_PREFIX = #{media_url_prefix}
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- collection url 업데이트 -->
+	<update id="updateProjectCollectionUrl" parameterType="com.instarverse.api.v1.project.vo.ProjectVo">
+		UPDATE project
+		SET COLLECTION_URL = #{collection_url}
+			, STATUS_CD = #{status_cd}
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 프로젝트 수정 - 메인 홀 전처리 -->
+	<update id="updateMainHallPre" parameterType="com.instarverse.api.v1.project.vo.ProjectVo">
+		UPDATE project
+		SET MAIN_HALL = 'N'
+		WHERE REG_ID = #{reg_id}
+		AND NICKNAME = #{nickname}
+	</update>
+	
+	<!-- 프로젝트 수정 - 메인 홀 -->
+	<update id="updateMainHall" parameterType="com.instarverse.api.v1.project.vo.ProjectVo">
+		UPDATE project
+		SET MAIN_HALL = 'Y'
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 프로젝트 상태 결제완료 체크 -->
+	<select id="checkProjectStatusCdPaid" parameterType="com.instarverse.api.v1.project.vo.ProjectVo" resultType="integer">
+		SELECT
+			COUNT(*) AS CNT
+		FROM
+			project A
+		WHERE 1=1
+		AND SEQ = #{seq}
+		AND A.DEL_YN = 'N'
+		AND A.REG_ID = #{uid}
+		<![CDATA[
+		AND A.STATUS_CD >= #{status_cd}
+		]]>
+	</select>
+	
+	<!-- 닉네임으로 프로젝트 조회 -->
+	<select id="selectProjectByNickName" parameterType="com.instarverse.api.v1.project.vo.ProjectVo" resultType="com.instarverse.api.v1.project.vo.ProjectVo">
+		SELECT
+			SEQ
+			, TITLE
+			, NICKNAME
+			, SUBTITLE
+			, POSTAR_URL
+		FROM 
+			project A
+		WHERE A.DEL_YN = 'N'
+		AND NICKNAME = #{nickname}
+		AND MAIN_HALL = 'Y';
+	</select>
+	
+	<!-- 프로젝트 정보 + 전시관 정보 -->
+	<select id="selectProjectAndExhibitionHall" parameterType="com.instarverse.api.v1.project.vo.ProjectVo" resultType="com.instarverse.api.v1.project.vo.ProjectExhibitionHallVo">
+		SELECT 
+			P.SEQ
+			, P.TITLE
+			, P.STATUS_CD
+			, P.SUBTITLE
+			, E.SEQ AS EXHIBITION_SEQ
+			, E.NAME AS EXHIBITION_NAME
+			, E.TYPE AS EXHIBITION_TYPE
+			, E.DISPLAY_MAXIMUM
+			, E.DESCRIPTION AS EXHIBITION_DESCRIPTION
+			, E.URL AS EXHIBITION_URL
+			, P.NICKNAME
+			, P.ARTIST_DETAILS
+			, P.EMAIL
+			, P.INSTARGRAM
+			, P.TWITTER
+			, P.DISCORD
+			, P.TELEGRAM
+			, P.SYMBOL
+			, P.POSTAR_URL
+			, P.BANNER_URL
+			, P.DESCRIPTION
+			, P.CONTRACT_ADDRESS
+			, P.COLLECTION_URL
+			, P.MEDIA_URL_PREFIX
+			, P.DISPLAY_START_TIME
+			, P.DISPLAY_END_TIME
+			, P.VIEW
+			, P.PRODUCTION_BACKGROUND
+			, P.TAG
+			, P.REG_ID AS UID
+		FROM 
+			project P
+		LEFT JOIN 
+			item E ON P.EXHIBITIONHALL_SEQ = E.SEQ
+		WHERE 
+			P.SEQ = #{seq};
+	</select>
+</mapper>

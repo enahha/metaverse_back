@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.vote.mapper.VoteMapper"> 
+	
+	<!-- 투표 등록 -->
+	<insert id="insertVote" parameterType="com.instarverse.api.v1.vote.vo.VoteVo">
+		INSERT INTO vote (
+			PROJECT_SEQ
+			, STATUS_CD
+			, PROJECT_MAINNET
+			, PROJECT_TYPE
+			, PROJECT_TITLE
+			, PROJECT_TITLE_KO
+			, PROJECT_WALLET_ADDRESS
+			, PROJECT_TOKEN_CONTRACT_ADDRESS
+			, PROJECT_PLATFORM_CONTRACT_ADDRESS
+			, TITLE
+			, TITLE_KO
+			, DESCRIPTION
+			, DESCRIPTION_KO
+			, MAIN_IMAGE
+			, START_TIME
+			, END_TIME
+			, FIXED_TIME
+			, REQUEST_AMOUNT
+			, PLATFORM_FEE
+			, WITHDRAWAL_AMOUNT
+			, CLOSE_OFF_TIME
+			, WITHDRAWAL_TIME
+			, WITHDRAWAL_TXID
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		) VALUES (
+			#{project_seq}
+			, #{status_cd}
+			, #{project_mainnet}
+			, #{project_type}
+			, #{project_title}
+			, #{project_title_ko}
+			, #{project_wallet_address}
+			, #{project_token_contract_address}
+			, #{project_platform_contract_address}
+			, #{title}
+			, #{title_ko}
+			, #{description}
+			, #{description_ko}
+			, #{main_image}
+			, #{start_time}
+			, #{end_time}
+			, #{fixed_time}
+			, #{request_amount}
+			, #{platform_fee}
+			, #{withdrawal_amount}
+			, #{close_off_time}
+			, #{withdrawal_time}
+			, #{withdrawal_txid}
+			, #{del_yn}
+			, #{reg_id}
+			, SYSDATE()
+			, NULL
+			, NULL
+			, NULL
+			, NULL
+		)
+		<selectKey resultType="int" keyProperty="seq" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<!-- 투표 조회 -->
+	<select id="selectVote" parameterType="com.instarverse.api.v1.vote.vo.VoteVo" resultType="com.instarverse.api.v1.vote.vo.VoteVo">
+		SELECT
+			*
+			, (TOTAL_AGREE / TOTAL) * 100 AS RATE_AGREE
+			, (TOTAL_DISAGREE / TOTAL) * 100 AS RATE_DISAGREE
+		FROM (
+			SELECT
+				SEQ
+				, PROJECT_SEQ
+				, STATUS_CD
+				, PROJECT_MAINNET
+				, PROJECT_TYPE
+				, PROJECT_TITLE
+				, PROJECT_TITLE_KO
+				, PROJECT_WALLET_ADDRESS
+				, PROJECT_TOKEN_CONTRACT_ADDRESS
+				, PROJECT_PLATFORM_CONTRACT_ADDRESS
+				, TITLE
+				, TITLE_KO
+				, DESCRIPTION
+				, DESCRIPTION_KO
+				, MAIN_IMAGE
+				, START_TIME
+				, END_TIME
+				, FIXED_TIME
+				, REQUEST_AMOUNT
+				, PLATFORM_FEE
+				, WITHDRAWAL_AMOUNT
+				, CLOSE_OFF_TIME
+				, WITHDRAWAL_TIME
+				, WITHDRAWAL_TXID
+				, DEL_YN
+				, REG_ID
+				, REG_TIME
+				, MOD_ID
+				, MOD_TIME
+				, DEL_ID
+				, DEL_TIME
+				, (SELECT COUNT(SEQ) FROM vote_holder WHERE VOTE_SEQ = A.SEQ) AS TOTAL
+				, (SELECT COUNT(SEQ) FROM vote_holder WHERE VOTE_SEQ = A.SEQ AND AGREE_YN = 'Y') AS TOTAL_AGREE
+				, (SELECT COUNT(SEQ) FROM vote_holder WHERE VOTE_SEQ = A.SEQ AND AGREE_YN = 'N') AS TOTAL_DISAGREE
+			FROM
+				vote A
+			WHERE 1=1
+			AND A.SEQ = #{seq}
+		) A
+	</select>
+	
+	<!-- 투표 삭제 -->
+	<update id="deleteVote" parameterType="com.instarverse.api.v1.vote.vo.VoteVo">
+		UPDATE vote SET
+			DEL_YN = #{del_yn}
+			, DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- My 투표 리스트 맥스 페이지 -->
+	<select id="selectMyVoteListLastPageNum" parameterType="com.instarverse.api.v1.vote.vo.VoteVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			vote A
+		WHERE 1=1
+		
+		<if test="keyword != null and keyword != ''">
+			AND (
+				UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.PROJECT_TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.PROJECT_TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.PROJECT_TOKEN_CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.PROJECT_PLATFORM_CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			)
+		</if>
+		AND A.DEL_YN = 'N'
+		AND A.REG_ID = #{reg_id}
+	</select>
+	
+	<!-- My 투표 리스트 조회 -->
+	<select id="selectMyVoteList" parameterType="com.instarverse.api.v1.vote.vo.VoteVo" resultType="com.instarverse.api.v1.vote.vo.VoteVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, STATUS_CD
+					, TITLE
+					, TITLE_KO
+					, PROJECT_MAINNET
+					, PROJECT_TYPE
+					, PROJECT_TITLE
+					, PROJECT_TITLE_KO
+					, (SELECT LOGO_IMAGE FROM project P WHERE P.SEQ = A.PROJECT_SEQ) AS PROJECT_LOGO_IMAGE
+					, MAIN_IMAGE
+					, START_TIME
+					, END_TIME
+				FROM
+					vote A
+				WHERE 1=1
+				AND A.DEL_YN = 'N'
+				AND A.REG_ID = #{reg_id}
+				
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.PROJECT_TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.PROJECT_TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.PROJECT_TOKEN_CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.PROJECT_PLATFORM_CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) A
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<!-- 투표 리스트 맥스 페이지 -->
+	<select id="selectVoteListLastPageNum" parameterType="com.instarverse.api.v1.vote.vo.VoteVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			vote A
+		WHERE 1=1
+		
+		<if test="keyword != null and keyword != ''">
+			AND (
+				UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.PROJECT_TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.PROJECT_TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.PROJECT_TOKEN_CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.PROJECT_PLATFORM_CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			)
+		</if>
+		AND A.DEL_YN = 'N'
+		<![CDATA[
+		AND A.STATUS_CD >= 30
+		]]>
+	</select>
+	
+	<!-- 투표 리스트 조회 -->
+	<select id="selectVoteList" parameterType="com.instarverse.api.v1.vote.vo.VoteVo" resultType="com.instarverse.api.v1.vote.vo.VoteVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, (TOTAL_AGREE / TOTAL) * 100 AS RATE_AGREE
+				, (TOTAL_DISAGREE / TOTAL) * 100 AS RATE_DISAGREE
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, STATUS_CD
+					, TITLE
+					, TITLE_KO
+					, PROJECT_MAINNET
+					, PROJECT_TYPE
+					, PROJECT_TITLE
+					, PROJECT_TITLE_KO
+					, (SELECT LOGO_IMAGE FROM project P WHERE P.SEQ = A.PROJECT_SEQ) AS PROJECT_LOGO_IMAGE
+					, MAIN_IMAGE
+					, START_TIME
+					, END_TIME
+					, (SELECT COUNT(SEQ) FROM vote_holder WHERE VOTE_SEQ = A.SEQ) AS TOTAL
+					, (SELECT COUNT(SEQ) FROM vote_holder WHERE VOTE_SEQ = A.SEQ AND AGREE_YN = 'Y') AS TOTAL_AGREE
+					, (SELECT COUNT(SEQ) FROM vote_holder WHERE VOTE_SEQ = A.SEQ AND AGREE_YN = 'N') AS TOTAL_DISAGREE
+				FROM
+					vote A
+				WHERE 1=1
+				AND A.DEL_YN = 'N'
+		<![CDATA[
+				AND A.STATUS_CD >= 30
+		]]>
+				
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.PROJECT_TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.PROJECT_TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.PROJECT_TOKEN_CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.PROJECT_PLATFORM_CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) A
+	</select>
+	
+	<!-- 투표 수정 -->
+	<update id="updateVote" parameterType="com.instarverse.api.v1.vote.vo.VoteVo">
+		UPDATE vote SET
+			TITLE = #{title}
+			, TITLE_KO = #{title_ko}
+			, DESCRIPTION = #{description}
+			, DESCRIPTION_KO = #{description_ko}
+			, START_TIME = #{start_time}
+			, END_TIME = #{end_time}
+			, MAIN_IMAGE = #{main_image}
+			, REQUEST_AMOUNT = #{request_amount}
+			, PLATFORM_FEE = #{platform_fee}
+			, WITHDRAWAL_AMOUNT = #{withdrawal_amount}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 투표 수정 - 확정 -->
+	<update id="updateVoteStatusCdFixed" parameterType="com.instarverse.api.v1.vote.vo.VoteVo">
+		UPDATE vote SET
+			STATUS_CD = #{status_cd}
+			, FIXED_TIME = SYSDATE()
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 투표 수정 - 마감 -->
+	<update id="updateVoteStatusCdClosed" parameterType="com.instarverse.api.v1.vote.vo.VoteVo">
+		UPDATE vote SET
+			STATUS_CD = #{status_cd}
+			, CLOSE_OFF_TIME = SYSDATE()
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 투표 수정 - 출금 -->
+	<update id="updateVoteWithdraw" parameterType="com.instarverse.api.v1.vote.vo.VoteVo">
+		UPDATE vote SET
+			WITHDRAWAL_TIME = SYSDATE()
+			, WITHDRAWAL_TXID = #{withdrawal_txid}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+</mapper>

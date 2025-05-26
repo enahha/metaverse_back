@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.alarm.mapper.AlarmMapper"> 
+	
+	<!-- 알람 등록 -->
+	<insert id="insertAlarm" parameterType="com.instarverse.api.v1.alarm.vo.AlarmVo">
+		INSERT INTO alarm (
+			TARGET_ADDRESS
+			, TARGET_SEQ
+			, ALARM_CD
+			, TITLE
+			, TITLE_KO
+			, TARGET_TITLE
+			, TARGET_TITLE_KO
+			, TARGET_IMAGE
+			, READ_YN
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		) VALUES (
+			#{target_address}
+			, #{target_seq}
+			, #{alarm_cd}
+			, #{title}
+			, #{title_ko}
+			, #{target_title}
+			, #{target_title_ko}
+			, #{target_image}
+			, #{read_yn}
+			, #{del_yn}
+			, #{reg_id}
+			, SYSDATE()
+			, NULL
+			, NULL
+			, NULL
+			, NULL
+		)
+		<selectKey resultType="int" keyProperty="seq" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<!-- 알람 조회 -->
+	<select id="selectAlarm" parameterType="com.instarverse.api.v1.alarm.vo.AlarmVo" resultType="com.instarverse.api.v1.alarm.vo.AlarmVo">
+		SELECT
+			SEQ
+			, TARGET_ADDRESS
+			, TARGET_SEQ
+			, ALARM_CD
+			, TITLE
+			, TITLE_KO
+			, TARGET_TITLE
+			, TARGET_TITLE_KO
+			, TARGET_IMAGE
+			, READ_YN
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			alarm A
+		WHERE 1=1
+		AND A.TARGET_ADDRESS = #{target_address}
+	</select>
+	
+	<!-- 알람 삭제 -->
+	<update id="deleteAlarm" parameterType="com.instarverse.api.v1.alarm.vo.AlarmVo">
+		UPDATE alarm SET
+			DEL_YN = #{del_yn}
+			, DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- My 알람 리스트 맥스 페이지 -->
+	<select id="selectMyAlarmListLastPageNum" parameterType="com.instarverse.api.v1.alarm.vo.AlarmVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			alarm A
+		WHERE 1=1
+		
+		<if test="keyword != null and keyword != ''">
+			AND (
+				UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.TARGET_TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.TARGET_TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			)
+		</if>
+		AND A.DEL_YN = 'N'
+		AND A.TARGET_ADDRESS = #{target_address}
+	</select>
+	
+	<!-- My 알람 리스트 조회 -->
+	<select id="selectMyAlarmList" parameterType="com.instarverse.api.v1.alarm.vo.AlarmVo" resultType="com.instarverse.api.v1.alarm.vo.AlarmVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, TARGET_ADDRESS
+					, TARGET_SEQ
+					, ALARM_CD
+					, TITLE
+					, TITLE_KO
+					, TARGET_TITLE
+					, TARGET_TITLE_KO
+					, TARGET_IMAGE
+					, READ_YN
+					, REG_TIME
+				FROM
+					alarm A
+				WHERE 1=1
+				AND A.DEL_YN = 'N'
+				AND A.TARGET_ADDRESS = #{target_address}
+				
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TARGET_TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TARGET_TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) A
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<!-- 알람 리스트 맥스 페이지 -->
+	<select id="selectAlarmListLastPageNum" parameterType="com.instarverse.api.v1.alarm.vo.AlarmVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			alarm A
+		WHERE 1=1
+		
+		<if test="keyword != null and keyword != ''">
+			AND (
+				UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.TARGET_TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				OR
+				UPPER(A.TARGET_TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			)
+		</if>
+		AND A.DEL_YN = 'N'
+	</select>
+	
+	<!-- 알람 리스트 조회 -->
+	<select id="selectAlarmList" parameterType="com.instarverse.api.v1.alarm.vo.AlarmVo" resultType="com.instarverse.api.v1.alarm.vo.AlarmVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, TARGET_ADDRESS
+					, TARGET_SEQ
+					, ALARM_CD
+					, TITLE
+					, TITLE_KO
+					, TARGET_TITLE
+					, TARGET_TITLE_KO
+					, TARGET_IMAGE
+					, READ_YN
+					, REG_TIME
+				FROM
+					alarm A
+				WHERE 1=1
+				AND A.DEL_YN = 'N'
+				
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TARGET_TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TARGET_TITLE_KO) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) A
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+	</select>
+	
+	<!-- 알람 수정 -->
+	<update id="updateAlarmRead" parameterType="com.instarverse.api.v1.alarm.vo.AlarmVo">
+		UPDATE alarm SET
+			READ_YN = #{read_yn}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+</mapper>

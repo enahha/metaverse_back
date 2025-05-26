@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.mediasale.mapper.MediaSaleMapper"> 
+	
+	<!-- 작품 판매 리스트 맥스 페이지 -->
+	<select id="selectMediaSaleListLastPageNum" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			media_sale A
+		WHERE 1=1
+		AND DEL_ID IS NULL
+		<if test="keyword != null and keyword != ''">
+		AND (
+			UPPER(A.MARKET_CD) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.MARKET_NAME) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.NFT_ID) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+		)
+		</if>
+		<if test="done">
+		AND
+			SETTLE_OUT IS NOT NULL
+		</if>
+		<if test="!done">
+		AND
+			SETTLE_OUT IS NULL
+		</if>
+	</select>
+	
+	<!-- 작품 판매 리스트 조회 -->
+	<select id="selectMediaSaleList" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo" resultType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, MARKET_CD 
+					, MARKET_NAME 
+					, SALE_PRICE 
+					, PAYMENT_CURRENCY 
+					, CONTRACT_ADDRESS 
+					, NFT_ID 
+					, SETTLE_IN 
+					, SETTLE_IN_DATE 
+					, SETTLE_OUT 
+					, SETTLE_OUT_DATE 
+					, DEL_YN
+					, REG_ID
+					, REG_TIME
+					, MOD_ID
+					, MOD_TIME
+					, DEL_ID
+					, DEL_TIME
+				FROM
+					media_sale A
+				WHERE 1=1
+				AND DEL_ID IS NULL
+		<if test="done">
+				AND
+				(SETTLE_OUT IS NOT NULL AND SETTLE_OUT != '')
+		</if>
+		<if test="!done">
+				AND
+				(SETTLE_OUT IS NULL OR SETTLE_OUT = '')
+		</if>
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.MARKET_CD) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.MARKET_NAME) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.NFT_ID) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) B
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+		ORDER BY B.SEQ DESC
+	</select>
+	
+	<!-- 작품 판매 조회 -->
+	<select id="selectMediaSale" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo" resultType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo">
+		SELECT
+			SEQ
+			, MARKET_CD 
+			, MARKET_NAME 
+			, SALE_PRICE 
+			, PAYMENT_CURRENCY 
+			, CONTRACT_ADDRESS 
+			, NFT_ID 
+			, SETTLE_IN 
+			, SETTLE_IN_DATE 
+			, SETTLE_OUT 
+			, SETTLE_OUT_DATE 
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			media_sale A
+		WHERE A.SEQ = #{seq}
+	</select>
+	
+	<!-- 작품 판매 등록 -->
+	<insert id="insertMediaSale" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo">
+		INSERT INTO media_sale (
+			MARKET_CD 
+			, MARKET_NAME 
+			, SALE_PRICE 
+			, PAYMENT_CURRENCY 
+			, CONTRACT_ADDRESS 
+			, NFT_ID 
+			, SETTLE_IN 
+			, SETTLE_IN_DATE 
+			, SETTLE_OUT 
+			, SETTLE_OUT_DATE 
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+		) VALUES (
+			#{market_cd}
+			, #{market_name}
+			, #{sale_price}
+			, #{payment_currency}
+			, #{contract_address}
+			, #{nft_id}
+			, #{settle_in}
+			, #{settle_in_date}
+			, #{settle_out}
+			, #{settle_out_date}
+			, #{del_yn}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 작품 판매 수정 -->
+	<update id="updateMediaSale" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo">
+		UPDATE media_sale SET
+			MARKET_CD = #{market_cd}
+			, MARKET_NAME = #{market_name}
+			, SALE_PRICE = #{sale_price}
+			, PAYMENT_CURRENCY = #{payment_currency}
+			, CONTRACT_ADDRESS = #{contract_address}
+			, NFT_ID = #{nft_id}
+			, SETTLE_IN = #{settle_in}
+			, SETTLE_IN_DATE = #{settle_in_date}
+			, SETTLE_OUT = #{settle_out}
+			, SETTLE_OUT_DATE = #{settle_out_date}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 작품 판매 삭제 -->
+	<update id="deleteMediaSale" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo">
+		UPDATE media_sale SET
+			DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+			, DEL_YN = 'Y'
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 나의 작품 판매 리스트 맥스 페이지 -->
+	<select id="selectMyMediaSaleListLastPageNum" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			media_sale A
+		INNER JOIN
+			media M ON A.NFT_ID = M.NFT_ID
+		INNER JOIN
+			my_media MM ON M.MY_MEDIA_SEQ = MM.SEQ
+		INNER JOIN
+			project P ON M.PROJECT_SEQ = P.SEQ
+		WHERE 1=1
+			AND A.DEL_ID IS NULL
+			AND MM.UID = #{uid}
+		<if test="keyword != null and keyword != ''">
+		AND (
+			UPPER(A.MARKET_CD) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.MARKET_NAME) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.NFT_ID) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+		)
+		</if>
+	</select>
+	
+	<!-- 나의 작품 판매 리스트 조회 -->
+	<select id="selectMyMediaSaleList" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo" resultType="com.instarverse.api.v1.mediasale.vo.MyMediaSaleVo">
+		SELECT
+		    *
+		FROM (
+		    SELECT
+				A.SEQ
+				, A.MARKET_CD 
+				, A.MARKET_NAME 
+				, A.SALE_PRICE 
+				, A.PAYMENT_CURRENCY 
+				, A.CONTRACT_ADDRESS 
+				, A.NFT_ID 
+				, A.SETTLE_IN 
+				, A.SETTLE_IN_DATE 
+				, A.SETTLE_OUT 
+				, A.SETTLE_OUT_DATE 
+				, A.REG_ID
+				, A.REG_TIME
+				, A.MOD_ID
+				, A.MOD_TIME
+				, A.DEL_ID
+				, A.DEL_TIME
+				, MM.SEQ AS MY_MEDIA_SEQ
+				, MM.UID
+				, MM.TYPE
+				, MM.URL
+				, MM.ORDER_NO
+				, MM.TITLE
+				, MM.SUBTITLE
+				, MM.DESCRIPTION
+				, MM.SALE_YN
+				, MM.PRICE
+				, MM.CREATED_AT
+				, MM.SIZE
+				, MM.MATERIALS
+				, MM.DEL_YN
+				, P.TITLE AS PROJECT_TITLE
+				, P.SUBTITLE AS PROJECT_SUBTITLE
+				, P.DESCRIPTION AS PROJECT_DESCRIPTION
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM
+			    media_sale A
+			INNER JOIN
+			    media M ON A.NFT_ID = M.NFT_ID
+			INNER JOIN
+			    my_media MM ON M.MY_MEDIA_SEQ = MM.SEQ
+			INNER JOIN
+			    project P ON M.PROJECT_SEQ = P.SEQ
+			CROSS JOIN 
+			    (SELECT @ROWNUM := 0) R -- ROWNUM 변수를 초기화
+			WHERE 1=1
+			    AND A.DEL_ID IS NULL
+			    AND MM.UID = #{uid}
+			<if test="keyword != null and keyword != ''">
+			    AND (
+			        UPPER(A.MARKET_CD) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			        OR
+			        UPPER(A.MARKET_NAME) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			        OR
+			        UPPER(A.CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			        OR
+			        UPPER(A.NFT_ID) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			        OR
+			        UPPER(MM.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			        OR
+			        UPPER(P.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			    )
+			</if>
+			ORDER BY A.SEQ DESC
+			LIMIT 10000
+		) A
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+    ORDER BY A.SEQ DESC
+	</select>
+	
+	<!-- 정산 예정 금액 조회 -->
+	<select id="selectMyMediaSaleSettleIn" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo" resultType="int">
+		SELECT COALESCE(SUM(subquery.SETTLE_IN), 0) AS TOTAL_SETTLE_IN
+		FROM (
+			SELECT 
+				A.SETTLE_IN
+			FROM
+				media_sale A
+			INNER JOIN
+				project P ON A.CONTRACT_ADDRESS = P.CONTRACT_ADDRESS
+			WHERE
+				A.DEL_ID IS NULL
+				AND (A.SETTLE_OUT IS NULL OR A.SETTLE_OUT = '')
+				AND P.REG_ID = #{uid}
+			GROUP BY
+				A.settle_in, A.nft_id, A.contract_address
+		) AS subquery;
+	</select>
+	
+	<!-- 정산 내역 조회 -->
+	<!--<select id="selectMyMediaSaleSettlOutList" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo" resultType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo">
+		SELECT 
+			A.SETTLE_OUT_DATE
+			, A.SETTLE_OUT
+		FROM
+		    media_sale A
+		INNER JOIN
+			project P ON A.CONTRACT_ADDRESS = P.CONTRACT_ADDRESS
+		WHERE
+			A.DEL_ID IS NULL
+			AND P.REG_ID = #{uid}
+		GROUP BY
+			A.SETTLE_OUT_DATE
+	</select>-->
+	
+		<!-- 정산 내역 리스트 맥스 페이지 -->
+	<select id="selectMyMediaSaleSettlOutLastPageNum" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			media_sale A
+		INNER JOIN
+			project P ON A.CONTRACT_ADDRESS = P.CONTRACT_ADDRESS
+		WHERE
+			A.DEL_ID IS NULL
+			AND P.REG_ID = #{uid}
+			AND (A.SETTLE_OUT IS NOT NULL AND A.SETTLE_OUT != '')
+		<if test="keyword != null and keyword != ''">
+		AND (
+			UPPER(A.MARKET_CD) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.MARKET_NAME) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.NFT_ID) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+		)
+		</if>
+	</select>
+	
+	<!-- 정산 내역 리스트 조회 -->
+	<select id="selectMyMediaSaleSettlOutList" parameterType="com.instarverse.api.v1.mediasale.vo.MediaSaleVo" resultType="com.instarverse.api.v1.mediasale.vo.MyMediaSaleVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				A.SETTLE_OUT_DATE
+				, A.SETTLE_OUT
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					A.SETTLE_OUT_DATE
+					, A.SETTLE_OUT
+				FROM
+				    media_sale A
+				INNER JOIN
+					project P ON A.CONTRACT_ADDRESS = P.CONTRACT_ADDRESS
+				WHERE
+					A.DEL_ID IS NULL
+					AND P.REG_ID = #{uid}
+					AND (A.SETTLE_OUT IS NOT NULL AND A.SETTLE_OUT != '')
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.MARKET_CD) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.MARKET_NAME) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.CONTRACT_ADDRESS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.NFT_ID) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				ORDER BY A.SETTLE_OUT_DATE DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) B
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+		ORDER BY B.SETTLE_OUT_DATE DESC
+	</select>
+</mapper>

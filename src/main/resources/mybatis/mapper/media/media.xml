@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.media.mapper.MediaMapper"> 
+	
+	<!-- 미디어 + 마이 미디어 정보 리스트 조회 -->
+	<select id="selectMediaListByProjectSeq" parameterType="com.instarverse.api.v1.media.vo.MediaInfoVo" resultType="com.instarverse.api.v1.media.vo.MediaInfoVo">
+		SELECT
+			A.SEQ
+			, A.PROJECT_SEQ
+			, A.MY_MEDIA_SEQ
+			, A.NFT_ID
+			, A.ORDER_NO
+			, B.UID
+			, B.TYPE
+			, B.URL
+			, B.THUMBNAIL_URL
+			, B.TITLE
+			, B.SUBTITLE
+			, B.DESCRIPTION
+			, B.SALE_YN
+			, B.PRICE
+			, B.CREATED_AT
+			, B.SIZE
+			, B.MATERIALS
+			, B.DEL_YN
+		FROM
+			media A
+		INNER JOIN my_media B ON A.MY_MEDIA_SEQ = B.SEQ
+		WHERE 1=1
+			AND A.DEL_YN = 'N'
+			AND PROJECT_SEQ = #{project_seq}
+		<if test="sale_yn != null and sale_yn != ''">
+			AND B.SALE_YN = #{sale_yn}
+		</if>
+		ORDER BY A.ORDER_NO
+	</select>
+	
+	<!-- json용 미디어 + 마이 미디어 정보 리스트 조회 -->
+	<select id="selectJsonMediaInfoList" parameterType="com.instarverse.api.v1.media.vo.MediaInfoVo" resultType="com.instarverse.api.v1.media.vo.MediaInfoVo">
+		SELECT
+			A.SEQ
+			, A.PROJECT_SEQ
+			, A.MY_MEDIA_SEQ
+			, A.NFT_ID
+			, A.ORDER_NO
+			, B.UID
+			, B.TYPE
+			, B.URL
+			, B.TITLE
+			, B.SUBTITLE
+			, B.DESCRIPTION
+			, B.SALE_YN
+			, B.PRICE
+			, B.CREATED_AT
+			, B.SIZE
+			, B.MATERIALS
+			, B.DEL_YN
+			, COALESCE(
+				(SELECT 
+					MAX(CAST(NFT_ID AS UNSIGNED)) 
+				FROM media 
+				WHERE NFT_ID IS NOT NULL
+				AND PROJECT_SEQ = #{project_seq}
+				)
+				, 0
+			 ) AS LAST_NFT_ID
+		FROM
+			media A
+		INNER JOIN my_media B ON A.MY_MEDIA_SEQ = B.SEQ
+		WHERE 1=1
+			AND B.DEL_YN = 'N'
+			AND A.PROJECT_SEQ = #{project_seq}
+			AND (A.NFT_ID IS NULL OR A.NFT_ID = '')
+			AND B.SALE_YN = 'Y'
+		ORDER BY A.SEQ
+	</select>
+	
+	<!-- 미디어 리스트 맥스 페이지 (페이징) -->
+	<select id="selectMediaListLastPageNumPaging" parameterType="com.instarverse.api.v1.media.vo.MediaVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			media A
+		WHERE 1=1
+		AND DEL_ID IS NULL
+		AND PROJECT_SEQ = #{project_seq}
+		<if test="keyword != null and keyword != ''">
+		AND (
+			UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.DESCRIPTION) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.SUBTITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+		)
+		</if>
+	</select>
+	
+	<!-- 미디어 리스트 조회 (페이징) -->
+	<select id="selectMediaListPaging" parameterType="com.instarverse.api.v1.media.vo.MediaVo" resultType="com.instarverse.api.v1.media.vo.MediaVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, PROJECT_SEQ
+					, MY_MEDIA_SEQ
+					, NFT_ID
+					, ORDER_NO
+					, SALE_YN
+					, PRICE
+					, DEL_YN
+					, REG_ID
+					, REG_TIME
+					, MOD_ID
+					, MOD_TIME
+					, DEL_ID
+					, DEL_TIME
+				FROM
+					media A
+				WHERE 1=1
+				AND DEL_ID IS NULL
+				AND PROJECT_SEQ = #{project_seq}
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.TITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.DESCRIPTION) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.SUBTITLE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) B
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+		ORDER BY B.SEQ DESC
+	</select>
+	
+	<!-- 미디어 리스트 조회 -->
+	<select id="selectMediaList" parameterType="com.instarverse.api.v1.media.vo.MediaVo" resultType="com.instarverse.api.v1.media.vo.MediaVo">
+		SELECT
+			SEQ
+			, PROJECT_SEQ
+			, MY_MEDIA_SEQ
+			, NFT_ID
+			, ORDER_NO
+			, SALE_YN
+			, PRICE
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			media A
+		WHERE 1=1
+		AND PROJECT_SEQ = #{project_seq}
+		AND REG_ID = #{uid}
+	</select>
+	
+	<!-- 미디어 조회 -->
+	<select id="selectMedia" parameterType="com.instarverse.api.v1.media.vo.MediaVo" resultType="com.instarverse.api.v1.media.vo.MediaVo">
+		SELECT
+			SEQ
+			, PROJECT_SEQ
+			, MY_MEDIA_SEQ
+			, NFT_ID
+			, ORDER_NO
+			, SALE_YN
+			, PRICE
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			media A
+		WHERE A.SEQ = #{seq}
+	</select>
+	
+	<!-- 미디어 재등록을 위한 전체 리스트 조회 -->
+	<select id="selectMediaListAll" parameterType="com.instarverse.api.v1.media.vo.MediaInfoVo" resultType="com.instarverse.api.v1.media.vo.MediaInfoVo">
+		SELECT
+			A.SEQ
+			, A.PROJECT_SEQ
+			, A.MY_MEDIA_SEQ
+			, A.NFT_ID
+			, A.ORDER_NO
+			, B.UID
+			, B.TYPE
+			, B.URL
+			, B.TITLE
+			, B.SUBTITLE
+			, B.DESCRIPTION
+			, B.SALE_YN
+			, B.PRICE
+			, B.CREATED_AT
+			, B.SIZE
+			, B.MATERIALS
+			, A.DEL_YN
+		FROM
+			media A
+		INNER JOIN my_media B ON A.MY_MEDIA_SEQ = B.SEQ
+		WHERE 1=1
+			AND PROJECT_SEQ = #{project_seq}
+		<if test="sale_yn != null and sale_yn != ''">
+			AND B.SALE_YN = #{sale_yn}
+		</if>
+		ORDER BY A.ORDER_NO
+	</select>
+	
+	<!-- 미디어 order_no 최대값 조회 -->
+	<select id="getMaxOrderNo" resultType="int">
+		SELECT COALESCE(MAX(order_no), 0)
+		FROM media
+		WHERE project_seq = #{projectSeq}
+	</select>
+	
+	<!-- 미디어 등록 -->
+	<insert id="insertMedia" parameterType="com.instarverse.api.v1.media.vo.MediaVo">
+		INSERT INTO media (
+			PROJECT_SEQ
+			, MY_MEDIA_SEQ
+			, NFT_ID
+			, ORDER_NO
+			, SALE_YN
+			, PRICE
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+		) VALUES (
+			#{project_seq}
+			, #{my_media_seq}
+			, #{nft_id}
+			, #{order_no}
+			, #{sale_yn}
+			, #{price}
+			, #{del_yn}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 미디어 수정 -->
+	<update id="updateMedia" parameterType="com.instarverse.api.v1.media.vo.MediaVo">
+		UPDATE media SET
+			TITLE = #{title}
+			, TITLE_KO = #{title_ko}
+			, CONTENTS = #{contents}
+			, CONTENTS_KO = #{contents_ko}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- nft_id 등록 -->
+	<update id="updateMediaNftId" parameterType="com.instarverse.api.v1.media.vo.MediaVo">
+		UPDATE media SET
+			NFT_ID = #{nft_id}
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 미디어 삭제 -->
+	<update id="deleteMedia" parameterType="com.instarverse.api.v1.media.vo.MediaVo">
+		UPDATE media SET
+			DEL_YN = #{del_yn}
+			, DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 미디어 재등록 -->
+	<update id="restoreMedia" parameterType="com.instarverse.api.v1.media.vo.MediaVo">
+		UPDATE media SET
+			DEL_YN = #{del_yn}
+			, DEL_ID = #{del_id}
+			, DEL_TIME = #{del_time}
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 마이 미디어 seq로 삭제 -->
+	<update id="deleteMediaByMyMediaSeq" parameterType="com.instarverse.api.v1.media.vo.MediaVo">
+		UPDATE media SET
+			DEL_YN = #{del_yn}
+			, DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE MY_MEDIA_SEQ = #{my_media_seq}
+	</update>
+	
+	<!-- 미디어 리스트 order_no 수정-->
+	<update id="updateMediaOrderNoList" parameterType="java.util.List">
+		<foreach collection="list" item="media" separator=";">
+			UPDATE media SET
+				ORDER_NO = #{media.order_no}
+			WHERE PROJECT_SEQ = #{media.project_seq}
+			AND SEQ = #{media.seq}
+		</foreach>
+	</update>
+	
+</mapper>

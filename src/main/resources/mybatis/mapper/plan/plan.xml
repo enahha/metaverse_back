@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.plan.mapper.PlanMapper"> 
+		
+	<!-- 플랜 리스트 조회 -->
+	<select id="selectPlanList" resultType="com.instarverse.api.v1.plan.vo.PlanVo">
+		SELECT
+			SEQ
+			, TYPE
+			, NAME
+			, PRICE
+			, STORAGE
+			, EXHIBITION_COUNT
+			, ORDER_NO
+			, PERIOD
+			, DETAIL_STORAGE
+			, DETAIL_EXHIBITION_COUNT
+			, IMAGE_URL
+			, DISCOUNT_RATE
+			, DISPLAY_YN
+			, DEL_YN
+		FROM
+			plan A
+		WHERE 1=1
+		AND DEL_ID IS NULL
+		ORDER BY
+			ORDER_NO ASC;
+	</select>
+	
+	<!-- 플랜 조회 -->
+	<select id="selectPlan" parameterType="com.instarverse.api.v1.plan.vo.PlanVo" resultType="com.instarverse.api.v1.plan.vo.PlanVo">
+		SELECT
+			SEQ
+			, TYPE
+			, NAME
+			, PRICE
+			, STORAGE
+			, EXHIBITION_COUNT
+			, ORDER_NO
+			, PERIOD
+			, DETAIL_STORAGE
+			, DETAIL_EXHIBITION_COUNT
+			, IMAGE_URL
+			, DISCOUNT_RATE
+			, DISPLAY_YN
+			, DEL_YN
+		FROM
+			plan A
+		WHERE A.SEQ = #{seq}
+	</select>
+	
+	<!-- 플랜 등록 -->
+	<insert id="insertPlan" parameterType="com.instarverse.api.v1.plan.vo.PlanVo">
+		INSERT INTO plan (
+			TYPE
+			, NAME
+			, PRICE
+			, STORAGE
+			, EXHIBITION_COUNT
+			, ORDER_NO
+			, PERIOD
+			, DETAIL_STORAGE
+			, DETAIL_EXHIBITION_COUNT
+			, IMAGE_URL
+			, DISCOUNT_RATE
+			, DISPLAY_YN
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+		) VALUES (
+			#{type}
+			, #{name}
+			, #{price}
+			, #{storage}
+			, #{exhibition_count}
+			, #{order_no}
+			, #{period}
+			, #{detail_storage}
+			, #{detail_exhibition_count}
+			, #{image_url}
+			, #{discount_rate}
+			, #{display_yn}
+			, #{del_yn}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 플랜 수정 -->
+	<update id="updatePlan" parameterType="com.instarverse.api.v1.plan.vo.PlanVo">
+		UPDATE plan SET
+			TYPE = #{type}
+			, NAME = #{name}
+			, PRICE = #{price}
+			, STORAGE = #{storage}
+			, EXHIBITION_COUNT = #{exhibition_count}
+			, ORDER_NO = #{order_no}
+			, PERIOD = #{period}
+			, DETAIL_STORAGE = #{detail_storage}
+			, DETAIL_EXHIBITION_COUNT = #{detail_exhibition_count}
+			, IMAGE_URL = #{image_url}
+			, DISCOUNT_RATE = #{discount_rate}
+			, DISPLAY_YN = #{display_yn}
+			, DEL_YN = #{del_yn}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 플랜 삭제 -->
+	<update id="deletePlan" parameterType="com.instarverse.api.v1.plan.vo.PlanVo">
+		UPDATE plan SET
+			DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+</mapper>

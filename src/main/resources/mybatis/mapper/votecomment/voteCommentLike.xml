@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.votecomment.mapper.VoteCommentLikeMapper">
+	 
+	<!-- 투표 댓글 좋아요/싫어요 등록 -->
+	<insert id="mergeVoteCommentLike" parameterType="com.instarverse.api.v1.votecomment.vo.VoteCommentLikeVo">
+		INSERT INTO vote_comment_like (
+			VOTE_COMMENT_SEQ
+			, LIKE_CD
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		) VALUES (
+			#{vote_comment_seq}
+			, #{like_cd}
+			, #{reg_id}
+			, SYSDATE()
+			, NULL
+			, NULL
+			, NULL
+			, NULL
+		)
+		ON DUPLICATE KEY
+		UPDATE
+			LIKE_CD = #{like_cd}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+	</insert>
+	
+</mapper>

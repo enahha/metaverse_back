@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.exchangerate.mapper.ExchangeRateMapper"> 
+	
+	<!-- 환율 등록 -->
+	<insert id="insertExchangeRate" parameterType="com.instarverse.api.v1.exchangerate.vo.ExchangeRateVo">
+		INSERT INTO exchange_rate (
+			SEARCH_DATE
+			, DEAL_BAS_R
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		) VALUES (
+			#{search_date}
+			, #{deal_bas_r}
+			, #{reg_id}
+			, SYSDATE()
+			, NULL
+			, NULL
+			, NULL
+			, NULL
+		)
+	</insert>
+	
+	<!-- 환율 조회 -->
+	<select id="selectExchangeRate" parameterType="com.instarverse.api.v1.exchangerate.vo.ExchangeRateVo" resultType="com.instarverse.api.v1.exchangerate.vo.ExchangeRateVo">
+		SELECT
+			SEQ
+			, SEARCH_DATE
+			, DEAL_BAS_R
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			exchange_rate A
+		WHERE 1=1
+		AND A.SEARCH_DATE = #{search_date}
+		AND A.DEL_ID IS NULL
+	</select>
+	
+	<!-- 최근 환율 조회 -->
+	<select id="selectLastExchangeRate" parameterType="com.instarverse.api.v1.exchangerate.vo.ExchangeRateVo" resultType="com.instarverse.api.v1.exchangerate.vo.ExchangeRateVo">
+		SELECT
+			SEQ
+			, SEARCH_DATE
+			, DEAL_BAS_R
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			exchange_rate A
+		WHERE 1=1
+		AND A.DEL_ID IS NULL
+		ORDER BY SEARCH_DATE DESC
+		LIMIT 1
+	</select>
+	
+</mapper>

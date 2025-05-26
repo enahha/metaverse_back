@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.sitemap.mapper.SitemapMapper"> 
+	
+	<!-- 사이트맵 리스트 조회 -->
+	<select id="selectSitemapList" resultType="com.instarverse.api.v1.sitemap.vo.SitemapVo">
+		SELECT
+			SEQ
+			, LOC
+			, LASTMOD
+			, CHANGEFREQ
+			, PRIORITY
+		FROM
+			sitemap A
+		WHERE A.DEL_ID IS NULL
+	</select>
+	
+	<!-- 토큰 MAX SEQ 조회 -->
+	<select id="selectTokenMaxSeq" resultType="integer">
+		SELECT
+			MAX(SEQ)
+		FROM
+			token A
+	</select>
+	
+</mapper>

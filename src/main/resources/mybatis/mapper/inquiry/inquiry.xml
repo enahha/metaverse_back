@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.inquiry.mapper.InquiryMapper"> 
+	
+	<!-- 문의사항 리스트 맥스 페이지 -->
+	<select id="selectInquiryListLastPageNum" parameterType="com.instarverse.api.v1.common.vo.CommonVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			inquiry A
+		WHERE 1=1
+		AND DEL_ID IS NULL
+		<if test="keyword != null and keyword != ''">
+		AND (
+			UPPER(A.NICKNAME) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.EMAIL) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.CONTENTS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+		)
+		</if>
+	</select>
+	
+	<!-- 문의사항 리스트 조회 -->
+	<select id="selectInquiryList" parameterType="com.instarverse.api.v1.common.vo.CommonVo" resultType="com.instarverse.api.v1.inquiry.vo.InquiryVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					SEQ
+					, NICKNAME
+					, EMAIL
+					, CONTENTS
+					, REG_ID
+					, REG_TIME
+					, MOD_ID
+					, MOD_TIME
+					, DEL_ID
+					, DEL_TIME
+				FROM
+					inquiry A
+				WHERE 1=1
+				AND DEL_ID IS NULL
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.NICKNAME) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.EMAIL) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.CONTENTS) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) B
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+		ORDER BY B.SEQ DESC
+	</select>
+	
+	
+	<!-- 문의사항 조회 -->
+	<select id="selectInquiry" parameterType="com.instarverse.api.v1.inquiry.vo.InquiryVo" resultType="com.instarverse.api.v1.inquiry.vo.InquiryVo">
+		SELECT
+			SEQ
+			, NICKNAME
+			, EMAIL
+			, CONTENTS
+			, REG_ID
+			, REG_TIME
+			, MOD_ID
+			, MOD_TIME
+			, DEL_ID
+			, DEL_TIME
+		FROM
+			inquiry A
+		WHERE A.SEQ = #{seq}
+	</select>
+	
+	<!-- 문의사항 등록 -->
+	<insert id="insertInquiry" parameterType="com.instarverse.api.v1.inquiry.vo.InquiryVo">
+		INSERT INTO inquiry (
+			NICKNAME
+			, EMAIL
+			, CONTENTS
+			, REG_ID
+			, REG_TIME
+		) VALUES (
+			#{nickname}
+			, #{email}
+			, #{contents}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 문의사항 수정 -->
+	<!--
+	<update id="updateInquiry" parameterType="com.instarverse.api.v1.inquiry.vo.InquiryVo">
+		UPDATE inquiry SET
+			NICKNAME = #{nickname}
+			, TITLE_KO = #{email}
+			, EMAIL = #{contents}
+			, CONTENTS = #{contents}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	-->
+	
+	<!-- 문의사항 삭제 -->
+	<!--
+	<update id="deleteInquiry" parameterType="com.instarverse.api.v1.inquiry.vo.InquiryVo">
+		UPDATE inquiry SET
+			DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	-->
+	
+</mapper>

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.instarverse.api.v1.item.mapper.ItemMapper"> 
+	
+	<!-- 아이템 리스트 맥스 페이지 -->
+	<select id="selectItemListLastPageNum" parameterType="com.instarverse.api.v1.common.vo.CommonVo" resultType="integer">
+		SELECT
+			CEIL(IF(COUNT(*)=0, 1, COUNT(*)) / #{pageSize}) AS LAST_PAGE_NUM
+		FROM
+			item A
+		WHERE 1=1
+		AND A.DEL_ID IS NULL
+		AND A.PRICE_TYPE = #{price_type}
+		<if test="type != null and type != ''">
+			AND A.TYPE = #{type}
+		</if>
+		<if test="keyword != null and keyword != ''">
+		AND (
+			UPPER(A.NAME) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+			OR
+			UPPER(A.TYPE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+		)
+		</if>
+	</select>
+	
+	<!-- 아이템 리스트 조회 -->
+	<select id="selectItemList" parameterType="com.instarverse.api.v1.common.vo.CommonVo" resultType="com.instarverse.api.v1.item.vo.ItemVo">
+		SELECT
+			*
+		FROM (
+			SELECT
+				*
+				, @ROWNUM := @ROWNUM + 1 AS ROWNUM
+			FROM (
+				SELECT
+					A.SEQ
+					, A.NAME
+					, A.TYPE
+					, A.PRICE
+					, A.PRICE_TYPE
+					, A.DISPLAY_MAXIMUM
+					, A.DESCRIPTION
+					, A.DESCRIPTION_KO
+					, A.URL
+					, A.DEL_YN
+					, A.REG_ID
+					, A.REG_TIME
+					, A.MOD_ID
+					, A.MOD_TIME
+					, A.DEL_ID
+					, A.DEL_TIME
+				FROM
+					item A
+				WHERE 1=1
+				AND A.DEL_ID IS NULL
+		<if test="type != null and type != ''">
+				AND A.TYPE = #{type}
+		</if>
+		<if test="price_type != null and price_type != ''">
+				AND A.PRICE_TYPE = #{price_type}
+		</if>
+		<if test="keyword != null and keyword != ''">
+				AND (
+					UPPER(A.NAME) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+					OR
+					UPPER(A.TYPE) LIKE CONCAT('%', UPPER(#{keyword}), '%')
+				)
+		</if>
+				ORDER BY A.SEQ DESC
+				LIMIT 10000
+			) A
+			, (SELECT @ROWNUM := 0) N
+		) B
+		<![CDATA[
+		WHERE ROWNUM > #{startRow}
+		AND ROWNUM <= #{endRow}
+		]]>
+		ORDER BY B.PRICE_TYPE ASC
+	</select>
+	
+	<!-- 아이템 조회 -->
+	<select id="selectItem" parameterType="com.instarverse.api.v1.item.vo.ItemVo" resultType="com.instarverse.api.v1.item.vo.ItemVo">
+		SELECT
+			A.SEQ
+			, A.NAME
+			, A.TYPE
+			, A.PRICE
+			, A.PRICE_TYPE
+			, A.DISPLAY_MAXIMUM
+			, A.DESCRIPTION
+			, A.DESCRIPTION_KO
+			, A.URL
+			, A.DEL_YN
+			, A.REG_ID
+			, A.REG_TIME
+			, A.MOD_ID
+			, A.MOD_TIME
+			, A.DEL_ID
+			, A.DEL_TIME
+		FROM
+			item A
+		WHERE A.SEQ = #{seq}
+	</select>
+	
+	<!-- 결제 가격 조회 -->
+	<select id="selectPrice" parameterType="int" resultType="string">
+		SELECT
+			PRICE
+		FROM
+			item A
+		WHERE seq = #{seq}
+		AND DEL_ID IS NULL
+	</select>
+	
+	<!-- 아이템 등록 -->
+	<insert id="insertItem" parameterType="com.instarverse.api.v1.item.vo.ItemVo">
+		INSERT INTO item (
+			NAME
+			, TYPE
+			, PRICE
+			, PRICE_TYPE
+			, DISPLAY_MAXIMUM
+			, DESCRIPTION
+			, DESCRIPTION_KO
+			, URL
+			, DEL_YN
+			, REG_ID
+			, REG_TIME
+		) VALUES (
+			#{name}
+			, #{type}
+			, #{price}
+			, #{price_type}
+			, #{display_maximum}
+			, #{description}
+			, #{description_ko}
+			, #{url}
+			, #{del_yn}
+			, #{reg_id}
+			, SYSDATE()
+		)
+	</insert>
+	
+	<!-- 아이템 수정 -->
+	<update id="updateItem" parameterType="com.instarverse.api.v1.item.vo.ItemVo">
+		UPDATE item SET
+			NAME = #{name}
+			, TYPE = #{type}
+			, PRICE = #{price}
+			, PRICE_TYPE = #{price_type}
+			, DISPLAY_MAXIMUM = #{display_maximum}
+			, DESCRIPTION = #{description}
+			, DESCRIPTION_KO = #{description_kp}
+			, URL = #{url}
+			, DEL_YN = #{del_yn}
+			, MOD_ID = #{mod_id}
+			, MOD_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+	<!-- 아이템 삭제 -->
+	<update id="deleteItem" parameterType="com.instarverse.api.v1.item.vo.ItemVo">
+		UPDATE item SET
+			DEL_ID = #{del_id}
+			, DEL_TIME = SYSDATE()
+		WHERE SEQ = #{seq}
+	</update>
+	
+</mapper>
